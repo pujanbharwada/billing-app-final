@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// i18n — Multi-Language Support (English, Hindi, Gujarati, Marathi)
+// i18n — Multi-Language Support (English, Hindi, Gujarati, Marathi, Telugu)
 // Built specifically for Indian shopkeepers and retail businesses.
 // ---------------------------------------------------------------------------
 
-export type LanguageKey = 'en' | 'hi' | 'gu' | 'mr';
+export type LanguageKey = 'en' | 'hi' | 'gu' | 'mr' | 'te';
 
 export type LanguageOption = {
   key: LanguageKey;
@@ -16,7 +16,8 @@ export const LANGUAGES: LanguageOption[] = [
   { key: 'en', label: 'English', nativeName: 'English', flag: '🇬🇧' },
   { key: 'hi', label: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳' },
   { key: 'gu', label: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
-  { key: 'mr', label: 'Marathi', nativeName: 'મરાઠી / मराठी', flag: '🇮🇳' },
+  { key: 'mr', label: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+  { key: 'te', label: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
 ];
 
 export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
@@ -315,5 +316,79 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     stockQty: 'स्टॉक प्रमाण',
     lowStock: 'कमी स्टॉक',
     restock: 'स्टॉक भरा',
+  },
+  te: {
+    // Navigation
+    dashboard: 'డాష్‌బోర్డ్',
+    newBill: 'కొత్త బిల్లు',
+    onlineOrders: 'ఆన్‌లైన్ ఆర్డర్లు',
+    customers: 'కస్టమర్లు (Customers)',
+    items: 'వస్తువులు (Products)',
+    inventory: 'స్టాక్ / ఇన్వెంటరీ',
+    billHistory: 'బిల్లు హిస్టరీ (History)',
+    settings: 'సెట్టింగ్‌లు',
+    admin: 'అడ్మిన్ ప్యానెల్',
+    downloadOurApp: 'యాప్ డౌన్‌లోడ్ చేయండి',
+    logOut: 'లాగ్ అవుట్',
+    freeTrial: '21 రోజుల ఉచిత ట్రయల్',
+    daysRemaining: 'రోజులు మిగిలి ఉన్నాయి',
+    signedInAs: 'లాగిన్ అయ్యారు:',
+
+    // Buttons & Actions
+    save: 'సేవ్ చేయండి (Save)',
+    cancel: 'రద్దు చేయండి',
+    delete: 'తొలగించండి (Delete)',
+    edit: 'సవరించండి (Edit)',
+    search: 'వెతకండి (Search)',
+    print: 'ప్రింట్ చేయండి',
+    share: 'షేర్ చేయండి',
+    downloadPdf: 'PDF డౌన్‌లోడ్ చేయండి',
+    loading: 'లోడ్ అవుతోంది…',
+    action: 'చర్య',
+    saveSettings: 'సెట్టింగ్‌లు సేవ్ చేయండి',
+
+    // Dashboard
+    totalCustomers: 'మొత్తం కస్టమర్లు',
+    totalItems: 'మొత్తం వస్తువులు',
+    totalBills: 'మొత్తం బిల్లులు',
+    monthlyRevenue: 'ఈ నెల అమ్మకాలు',
+    totalRevenue: 'మొత్తం ఆదాయం (Revenue)',
+    recentBills: 'ఇటీవలి బిల్లులు',
+    sales7Days: 'గత 7 రోజుల అమ్మకాలు',
+    quickActions: 'త్వరిత చర్యలు',
+
+    // Billing Form
+    billDetails: 'బిల్లు వివరాలు',
+    billNumber: 'బిల్లు నంబర్',
+    customerName: 'కస్టమర్ పేరు',
+    selectOrCreateCustomer: 'కస్టమర్‌ను ఎంచుకోండి లేదా పేరు నమోదు చేయండి',
+    patientName: 'రోగి పేరు',
+    patientAddress: 'రోగి చిరునామా',
+    doctorName: 'డాక్టర్ పేరు',
+    addItemToBill: '+ వస్తువును జోడించండి',
+    selectProduct: 'వస్తువును ఎంచుకోండి',
+    qty: 'పరిమాణం (Qty)',
+    rate: 'ధర (Rate)',
+    discount: 'డిస్కౌంట్',
+    taxGst: 'పన్ను / GST',
+    subtotal: 'ఉప మొత్తం (Subtotal)',
+    grandTotal: 'మొత్తం బిల్లు (Grand Total)',
+    generateBill: 'బిల్లును రూపొందించండి (Generate)',
+    updateBill: 'బిల్లును అప్‌డేట్ చేయండి',
+
+    // Settings
+    language: 'యాప్ భాష (Language)',
+    selectLanguageDesc: 'మీకు నచ్చిన భాషను ఎంచుకోండి.',
+    storeType: 'దుకాణం రకం (Store Type)',
+    invoicePaperSize: 'ఇన్‌వాయిస్ పేపర్ సైజు',
+    shopProfile: 'దుకాణం ప్రొఫైల్',
+    shopName: 'దుకాణం పేరు',
+    phone: 'ఫోన్ నంబర్',
+    address: 'దుకాణం చిరునామా',
+
+    // Stock & Inventory
+    stockQty: 'స్టాక్ పరిమాణం',
+    lowStock: 'తక్కువ స్టాక్',
+    restock: 'స్టాక్ జోడించండి',
   },
 };

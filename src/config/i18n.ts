@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
-// i18n — Multi-Language Support (English, Hindi, Gujarati, Marathi)
+// i18n — Multi-Language Support (English, Hindi, Gujarati, Marathi, Telugu)
 // ---------------------------------------------------------------------------
 
-export type LanguageKey = 'en' | 'hi' | 'gu' | 'mr';
+export type LanguageKey = 'en' | 'hi' | 'gu' | 'mr' | 'te';
 
 export type LanguageOption = {
   key: LanguageKey;
@@ -15,7 +15,8 @@ export const LANGUAGES: LanguageOption[] = [
   { key: 'en', label: 'English', nativeName: 'English', flag: '🇬🇧' },
   { key: 'hi', label: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳' },
   { key: 'gu', label: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
-  { key: 'mr', label: 'Marathi', nativeName: 'મરાઠી / मराठी', flag: '🇮🇳' },
+  { key: 'mr', label: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+  { key: 'te', label: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
 ];
 
 export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
@@ -146,5 +147,37 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'नुकतीच झालेली बिले',
     generateBill: 'बिल तयार करा (Generate)',
     language: 'ॲपची भाषा (Language)',
+  },
+  te: {
+    dashboard: 'డాష్‌బోర్డ్',
+    newBill: 'కొత్త బిల్లు',
+    onlineOrders: 'ఆన్‌లైన్ ఆర్డర్లు',
+    customers: 'కస్టమర్లు (Customers)',
+    items: 'వస్తువులు (Products)',
+    inventory: 'స్టాక్ / ఇన్వెంటరీ',
+    billHistory: 'బిల్లు హిస్టరీ (History)',
+    settings: 'సెట్టింగ్‌లు',
+    admin: 'అడ్మిన్ ప్యానెల్',
+    logOut: 'లాగ్ అవుట్',
+    freeTrial: '21 రోజుల ఉచిత ట్రయల్',
+    daysRemaining: 'రోజులు మిగిలి ఉన్నాయి',
+    signedInAs: 'లాగిన్ అయ్యారు:',
+    save: 'సేవ్ చేయండి (Save)',
+    cancel: 'రద్దు చేయండి',
+    delete: 'తొలగించండి (Delete)',
+    edit: 'సవరించండి (Edit)',
+    search: 'వెతకండి (Search)',
+    print: 'ప్రింట్ చేయండి',
+    share: 'షేర్ చేయండి',
+    downloadPdf: 'PDF డౌన్‌లోడ్ చేయండి',
+    loading: 'లోడ్ అవుతోంది…',
+    totalCustomers: 'మొత్తం కస్టమర్లు',
+    totalItems: 'మొత్తం వస్తువులు',
+    totalBills: 'మొత్తం బిల్లులు',
+    monthlyRevenue: 'ఈ నెల అమ్మకాలు',
+    totalRevenue: 'మొత్తం ఆదాయం (Revenue)',
+    recentBills: 'ఇటీవలి బిల్లులు',
+    generateBill: 'బిల్లును రూపొందించండి (Generate)',
+    language: 'యాప్ భాష (Language)',
   },
 };
