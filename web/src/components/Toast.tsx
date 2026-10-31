@@ -1,9 +1,3 @@
-// ---------------------------------------------------------------------------
-// TOAST + CONFIRM — replaces React Native's Alert.alert on the web.
-//   const { toast, confirm } = useToast();
-//   toast('Saved ✅');                          // transient message
-//   if (await confirm('Delete?', 'Sure?')) {…}  // promise-based confirm
-// ---------------------------------------------------------------------------
 import React, {
   createContext,
   useCallback,
@@ -11,10 +5,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
+
 import { Button } from './UI';
 
 type ToastKind = 'info' | 'success' | 'error';
+
 type ToastItem = { id: number; message: string; kind: ToastKind };
+
 type ConfirmState = {
   title: string;
   message?: string;
@@ -34,11 +31,15 @@ type ToastApi = {
 const Ctx = createContext<ToastApi | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+
   const [items, setItems] = useState<ToastItem[]>([]);
+
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+
   const idRef = useRef(0);
 
   const toast = useCallback((message: string, kind: ToastKind = 'info') => {
+
     const id = idRef.current++;
     setItems(prev => [...prev, { id, message, kind }]);
     setTimeout(() => setItems(prev => prev.filter(t => t.id !== id)), 3500);
@@ -62,12 +63,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     success: 'var(--success)',
     error: 'var(--danger)',
   };
-
   return (
     <Ctx.Provider value={{ toast, confirm }}>
       {children}
-
-      {/* Toasts */}
+      {}
       <div
         style={{
           position: 'fixed',
@@ -94,8 +93,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           </div>
         ))}
       </div>
-
-      {/* Confirm dialog */}
+      {}
       {confirmState ? (
         <div
           onClick={() => closeConfirm(false)}
@@ -143,6 +141,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useToast(): ToastApi {
+
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
   return ctx;

@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSubscription } from '../context/SubscriptionContext';
+
 import { Button, Card, Spinner } from '../components/UI';
+
 import { ADMIN_UPI_ID, ADMIN_NAME } from '../config/constants';
+
 import {
   PLANS,
   submitSubscriptionPayment,
@@ -11,20 +17,28 @@ import {
 } from '../services/subscriptionService';
 
 export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
+
   const { user, signOut } = useAuth();
+
   const { refresh, status } = useSubscription();
+
   const navigate = useNavigate();
 
   const [selectedPlanKey, setSelectedPlanKey] = useState<string>('1y');
+
   const [pendingPayment, setPendingPayment] = useState<any>(null);
+
   const [loading, setLoading] = useState(true);
+
   const [submitting, setSubmitting] = useState(false);
+
   const [checking, setChecking] = useState(false);
+
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
   const activePlans = PLANS.filter(p => p.price > 0 && !p.adminOnly);
-  const currentPlan = activePlans.find(p => p.key === selectedPlanKey) || activePlans[0];
 
+  const currentPlan = activePlans.find(p => p.key === selectedPlanKey) || activePlans[0];
   useEffect(() => {
     if (!user?.id) return;
     getUserPendingPayment(user.id)
@@ -44,6 +58,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
     try {
       await refresh();
       if (user?.id) {
+
         const p = await getUserPendingPayment(user.id);
         if (p && status !== 'active') {
           setPendingPayment(p);
@@ -68,6 +83,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
         currentPlan.price,
       );
       setSubmittedSuccess(true);
+
       const p = await getUserPendingPayment(user.id);
       setPendingPayment(p);
     } catch (e: any) {
@@ -77,15 +93,14 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
     }
   }
 
-  // Generate NPCI Standard UPI String for exact plan price
   const upiUri = `upi://pay?pa=${encodeURIComponent(ADMIN_UPI_ID)}&pn=${encodeURIComponent(ADMIN_NAME)}&am=${currentPlan.price.toFixed(2)}&tn=${encodeURIComponent(`Subscription ${currentPlan.label} - ${user?.email}`)}&cu=INR`;
+
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
 
   const isExpired = status === 'expired';
+
   const isActive = status === 'active';
-
   if (loading) return <Spinner text="Checking account status…" />;
-
   return (
     <div style={{ maxWidth: 650, margin: '20px auto', padding: '0 16px' }}>
       {forceShow ? (
@@ -117,8 +132,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
           )}
         </p>
       </div>
-
-      {/* Active Plan Green Confirmation Banner */}
+      {}
       {isActive && !pendingPayment && !submittedSuccess ? (
         <Card style={{ textAlign: 'center', padding: 18, marginBottom: 20, borderColor: 'var(--success)', background: 'var(--success-soft)' }}>
           <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--success)' }}>
@@ -129,8 +143,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
           </p>
         </Card>
       ) : null}
-
-      {/* Pending Payment Box — only show when account is NOT active yet */}
+      {}
       {(pendingPayment || submittedSuccess) && !isActive ? (
         <Card style={{ textAlign: 'center', padding: 24, marginBottom: 20, borderColor: 'var(--warning)', background: 'var(--warning-soft)' }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⏳</div>
@@ -147,11 +160,12 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
         </Card>
       ) : (
         <>
-          {/* Plan Selection Cards */}
+          {}
           <Card style={{ marginBottom: 20 }}>
             <h3 style={{ marginTop: 0, marginBottom: 12 }}>1. Choose Subscription Plan</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10 }}>
               {activePlans.map(p => {
+
                 const active = p.key === selectedPlanKey;
                 return (
                   <div
@@ -183,14 +197,12 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
               })}
             </div>
           </Card>
-
-          {/* Payment Instructions & Official GPay QR Code */}
+          {}
           <Card style={{ marginBottom: 20, textAlign: 'center' }}>
             <h3 style={{ marginTop: 0, marginBottom: 4 }}>2. Pay via Direct UPI (0% Fee)</h3>
             <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
               Scan official GPay QR code below for <strong>₹{currentPlan.price}</strong>
             </p>
-
             <div style={{ margin: '16px 0', display: 'flex', justifyContent: 'center' }}>
               <img
                 src={qrUrl}
@@ -205,13 +217,11 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
                 }}
               />
             </div>
-
             <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
               <span className="muted">UPI ID: </span>
               <strong style={{ userSelect: 'all', color: 'var(--primary)' }}>{ADMIN_UPI_ID}</strong>
             </div>
-
-            {/* Mobile 1-Tap App Launchers */}
+            {}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
               <a
                 href={upiUri}
@@ -221,7 +231,6 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
                 📲 Open UPI App
               </a>
             </div>
-
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 16 }}>
               <Button
                 title="✅ I Have Paid (Notify Admin)"
@@ -233,12 +242,10 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
           </Card>
         </>
       )}
-
       <Card style={{ marginBottom: 16 }}>
         <p className="muted" style={{ marginTop: 0, marginBottom: 10 }}>Already paid or approved? Check status below.</p>
         <Button title="🔄 Refresh Status" variant="ghost" block loading={checking} onClick={checkAgain} />
       </Card>
-
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <Button title="Log Out" variant="danger" small onClick={signOut} />
       </div>
@@ -247,6 +254,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
 }
 
 function planLabel(key?: string) {
+
   const p = PLANS.find(x => x.key === key);
   return p?.label ?? 'Subscription Plan';
 }

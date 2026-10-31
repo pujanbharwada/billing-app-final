@@ -1,11 +1,7 @@
-// ---------------------------------------------------------------------------
-// STOREFRONT UNLOCK CARD COMPONENT
-// ---------------------------------------------------------------------------
-// Unlocks when the shopkeeper adds 40 or more items to their catalog!
-// Displays progress towards 40 items, or the unlocked shareable public store URL.
-// ---------------------------------------------------------------------------
 import { useAuth } from '../context/AuthContext';
+
 import { useToast } from './Toast';
+
 import { Card, Button } from './UI';
 
 type StorefrontUnlockCardProps = {
@@ -13,15 +9,16 @@ type StorefrontUnlockCardProps = {
 };
 
 export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
-  const { user } = useAuth();
-  const { toast } = useToast();
 
+  const { user } = useAuth();
+
+  const { toast } = useToast();
   if (!user) return null;
 
   const isUnlocked = itemCount >= 40;
+
   const progressPercent = Math.min(100, Math.round((itemCount / 40) * 100));
 
-  // Construct current domain store link
   const storeUrl = `${window.location.origin}/store/${user.id}`;
 
   function copyStoreUrl() {
@@ -30,10 +27,10 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
   }
 
   function shareStoreWhatsApp() {
+
     const msg = `🛒 *Check out our online catalog & place direct orders!*\n\nView items, live stock, and order directly:\n👉 ${storeUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   }
-
   return (
     <Card
       style={{
@@ -55,8 +52,7 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
               {itemCount} / 40 Items Added
             </span>
           </div>
-
-          {/* Progress Bar */}
+          {}
           <div style={{ marginTop: 12 }}>
             <div style={{ background: 'var(--border)', height: 8, borderRadius: 4, overflow: 'hidden' }}>
               <div
@@ -89,8 +85,7 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
               ✨ UNLOCKED (40+ Items)
             </span>
           </div>
-
-          {/* Store URL Card & Buttons */}
+          {}
           <div
             style={{
               marginTop: 14,
@@ -115,7 +110,6 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
             >
               {storeUrl}
             </div>
-
             <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
               <button className="btn btn-secondary btn-sm" onClick={copyStoreUrl}>
                 📋 Copy Link
@@ -133,8 +127,7 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
                 👁️ Preview Public Store →
               </a>
             </div>
-
-            {/* QR Code for Store Link */}
+            {}
             <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(storeUrl)}`}
@@ -150,6 +143,7 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
                   className="btn btn-ghost btn-sm"
                   style={{ marginTop: 8 }}
                   onClick={() => {
+
                     const link = document.createElement('a');
                     link.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(storeUrl)}`;
                     link.download = 'store-qr-code.png';

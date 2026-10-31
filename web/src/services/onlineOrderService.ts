@@ -1,6 +1,3 @@
-// ---------------------------------------------------------------------------
-// ONLINE ORDERS SERVICE
-// ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
 
 export type OnlineOrder = {
@@ -23,14 +20,14 @@ export type OnlineOrder = {
   created_at: string;
 };
 
-// Collision-safe order number using timestamp + random suffix
 function generateOrderNumber(): string {
+
   const ts = Date.now().toString(36).toUpperCase();
+
   const rand = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `ORD-${ts}-${rand}`;
 }
 
-// Create a new online order from public storefront
 export async function createOnlineOrder(orderData: {
   userId: string;
   customerName: string;
@@ -45,7 +42,9 @@ export async function createOnlineOrder(orderData: {
   }>;
   totalAmount: number;
 }): Promise<OnlineOrder> {
+
   const orderNumber = generateOrderNumber();
+
   const now = new Date().toISOString();
 
   const formattedItems = orderData.items.map(it => ({
@@ -74,14 +73,13 @@ export async function createOnlineOrder(orderData: {
     })
     .select()
     .single();
-
   if (billErr) {
     throw new Error('Database Error: ' + billErr.message);
   }
 
   const billId = billRes.id;
-
   if (formattedItems.length > 0) {
+
     const itemRows = formattedItems.map(it => ({
       bill_id: billId,
       item_id: it.item_id,
@@ -97,7 +95,6 @@ export async function createOnlineOrder(orderData: {
       console.error('Warning: bill_items insert error:', itemErr);
     }
   }
-
   return {
     id: billId,
     order_number: orderNumber,
@@ -112,7 +109,6 @@ export async function createOnlineOrder(orderData: {
   };
 }
 
-// Delete an online order permanently from DB
 export async function deleteOnlineOrder(orderId: string): Promise<void> {
   try {
     await supabase.from('bill_items').delete().eq('bill_id', orderId);
@@ -122,28 +118,30 @@ export async function deleteOnlineOrder(orderId: string): Promise<void> {
   }
 }
 
-// Fetch shopkeeper's online orders (Auto-deletes orders completed > 5 mins ago)
 export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> {
-  // Fetch only bills that have extra JSON (online orders), not ALL bills
+
   const { data: bills, error } = await supabase
     .from('bills')
     .select('*')
     .eq('user_id', userId)
     .not('extra->is_online_order', 'is', null)
     .order('created_at', { ascending: false });
-
   if (error || !bills) return [];
 
   const onlineBills = bills.filter(b => b.extra && (b.extra as any).is_online_order);
   if (onlineBills.length === 0) return [];
 
   const nowMs = Date.now();
+
   const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
   const expiredIds: string[] = [];
 
   const activeBills = onlineBills.filter(b => {
+
     const extra = (b.extra as any) || {};
     if (extra.order_status === 'completed' && extra.completed_at) {
+
       const completedMs = new Date(extra.completed_at).getTime();
       if (nowMs - completedMs >= FIVE_MINUTES_MS) {
         expiredIds.push(b.id);
@@ -152,15 +150,13 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
     }
     return true;
   });
-
-  // Purge expired orders with proper await
   if (expiredIds.length > 0) {
     await Promise.allSettled(expiredIds.map(id => deleteOnlineOrder(id)));
   }
-
   if (activeBills.length === 0) return [];
 
   const billIds = activeBills.map(b => b.id);
+
   const { data: billItems } = await supabase
     .from('bill_items')
     .select('*')
@@ -179,13 +175,13 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
       });
     }
   }
-
   return activeBills.map(b => {
+
     const extra = (b.extra as any) || {};
+
     const resolvedItems = itemsMap[b.id] && itemsMap[b.id].length > 0
       ? itemsMap[b.id]
       : (extra.order_items || []);
-
     return {
       id: b.id,
       order_number: b.bill_number,
@@ -202,11 +198,11 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
   });
 }
 
-// Update order status
 export async function updateOrderStatus(
   orderId: string,
   status: 'pending' | 'accepted' | 'completed',
 ): Promise<void> {
+
   const { data: bill } = await supabase
     .from('bills')
     .select('extra')
@@ -214,52 +210,50 @@ export async function updateOrderStatus(
     .single();
 
   const currentExtra = (bill?.extra as object) || {};
+
   const updatedExtra: any = {
     ...currentExtra,
     order_status: status,
   };
-
   if (status === 'completed' && !updatedExtra.completed_at) {
     updatedExtra.completed_at = new Date().toISOString();
   }
-
   await supabase
     .from('bills')
     .update({ extra: updatedExtra })
     .eq('id', orderId);
 }
 
-// Deduct inventory stock for each item in an online order
 export async function deductInventoryForOrder(
   items: Array<{ item_id: string; qty: number }>,
 ): Promise<void> {
+
   const results = await Promise.allSettled(
     items
-      .filter(it => it.item_id) // Only deduct for items with valid IDs
+      .filter(it => it.item_id)
       .map(async it => {
-        // Directly decrement stock_qty on the item
+
         const { data: item } = await supabase
           .from('items')
           .select('stock_qty, track_stock')
           .eq('id', it.item_id)
           .single();
-
         if (item) {
+
           const currentStock = item.stock_qty ?? 0;
+
           const newStock = Math.max(0, currentStock - it.qty);
           await supabase
             .from('items')
             .update({ stock_qty: newStock })
             .eq('id', it.item_id);
-
-          // Also log stock movement if track_stock is enabled
           if (item.track_stock) {
+
             const { data: itemFull } = await supabase
               .from('items')
               .select('user_id')
               .eq('id', it.item_id)
               .single();
-
             if (itemFull?.user_id) {
               await supabase.from('stock_movements').insert({
                 item_id: it.item_id,
@@ -280,7 +274,6 @@ export async function deductInventoryForOrder(
   }
 }
 
-// Accept order AND deduct inventory in one call
 export async function acceptAndDeductInventory(
   orderId: string,
   items: Array<{ item_id: string; qty: number }>,

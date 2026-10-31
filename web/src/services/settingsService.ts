@@ -1,11 +1,9 @@
-// ---------------------------------------------------------------------------
-// SETTINGS SERVICE — the user's store type + shop profile (name, logo, phone,
-// address). One row per user; RLS keeps it private. (See migration 002.)
-// ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
+
 import type { Settings } from '../types/models';
 
 export async function getSettings(userId: string): Promise<Settings | null> {
+
   const { data, error } = await supabase
     .from('settings')
     .select('*')
@@ -15,13 +13,14 @@ export async function getSettings(userId: string): Promise<Settings | null> {
   return (data as Settings) ?? null;
 }
 
-// Create the row if missing (used on first load), with an optional store type.
 export async function ensureSettings(
   userId: string,
   storeType = 'grocery',
 ): Promise<Settings> {
+
   const existing = await getSettings(userId);
   if (existing) return existing;
+
   const { data, error } = await supabase
     .from('settings')
     .insert({ user_id: userId, store_type: storeType })
@@ -35,6 +34,7 @@ export async function saveSettings(
   userId: string,
   patch: Partial<Omit<Settings, 'user_id'>>,
 ): Promise<Settings> {
+
   const { data, error } = await supabase
     .from('settings')
     .upsert(

@@ -1,14 +1,3 @@
-// ---------------------------------------------------------------------------
-// STORE TYPES — the single source of truth for how billing adapts to each kind
-// of business. Each type declares:
-//   • labels for the item / quantity columns,
-//   • extra PER-LINE fields (stored in bill_items.meta), e.g. batch + expiry,
-//   • whether per-line discount % is shown,
-//   • bill-level extras (service charge, table no, order type, notes).
-// Adding a new store type = adding one entry here; the billing form, invoice,
-// and settings page all read from this config.
-// ---------------------------------------------------------------------------
-
 export type StoreType =
   | 'grocery'
   | 'medical'
@@ -20,7 +9,7 @@ export type StoreType =
 export type LineFieldType = 'text' | 'date' | 'number';
 
 export type LineField = {
-  key: string; // stored in bill_items.meta[key]
+  key: string;
   label: string;
   type: LineFieldType;
   placeholder?: string;
@@ -33,15 +22,15 @@ export type StoreTypeConfig = {
   label: string;
   emoji: string;
   blurb: string;
-  itemLabel: string; // header for the item column
-  qtyLabel: string; // header for the qty column
-  customerLabel?: string; // override "Customer" label (e.g. "Patient Name")
-  lineFields: LineField[]; // extra inputs shown on every item row
-  lineDiscount: boolean; // show a per-line discount % column
-  billExtras: BillExtra[]; // bill-level extras beyond discount % + tax %
-  expiryAlerts: boolean; // surface expiry reminders (medical)
-  hideTax?: boolean; // hide Tax / GST % field from billing form
-  medicalExtras?: boolean; // show patient address, doctor name, doctor address
+  itemLabel: string;
+  qtyLabel: string;
+  customerLabel?: string;
+  lineFields: LineField[];
+  lineDiscount: boolean;
+  billExtras: BillExtra[];
+  expiryAlerts: boolean;
+  hideTax?: boolean;
+  medicalExtras?: boolean;
 };
 
 export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {

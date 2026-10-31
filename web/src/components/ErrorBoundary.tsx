@@ -1,4 +1,5 @@
 import { Component, ReactNode, ErrorInfo } from 'react';
+
 import { Button, Card } from './UI';
 
 interface Props {
@@ -15,19 +16,15 @@ export class ErrorBoundary extends Component<Props, State> {
     hasError: false,
     error: null,
   };
-
   public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
-
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Unhandled UI error:', error, errorInfo);
   }
-
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
-
   public render() {
     if (this.state.hasError) {
       return (
@@ -43,7 +40,6 @@ export class ErrorBoundary extends Component<Props, State> {
         </div>
       );
     }
-
     return this.props.children;
   }
 }

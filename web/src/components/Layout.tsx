@@ -1,14 +1,19 @@
-// ---------------------------------------------------------------------------
-// LAYOUT — the shell for logged-in business users: sidebar + topbar.
-// ---------------------------------------------------------------------------
 import { useState } from 'react';
+
 import { NavLink, useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSubscription } from '../context/SubscriptionContext';
+
 import { useSettings } from '../context/SettingsContext';
+
 import { useLanguage } from '../context/LanguageContext';
+
 import { APP_NAME } from '../config/constants';
+
 import { Button } from './UI';
+
 import { ExpiryReminder } from './ExpiryReminder';
 
 type NavItem = { to: string; labelKey: string; icon: string; end?: boolean };
@@ -25,11 +30,17 @@ const NAV: NavItem[] = [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+
   const { user, signOut } = useAuth();
+
   const { settings, store } = useSettings();
+
   const { status, daysLeft } = useSubscription();
+
   const { lang, setLang, t, languages } = useLanguage();
+
   const navigate = useNavigate();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const sidebar = (
@@ -85,7 +96,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </span>
         </div>
       </div>
-
       {NAV.map(n => (
         <NavLink
           key={n.to}
@@ -107,10 +117,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {t(n.labelKey)}
         </NavLink>
       ))}
-
       <div style={{ flex: 1 }} />
-
-      {/* 21-Day Free Trial / Subscription Badge */}
+      {}
       <div
         style={{
           background: status === 'trial' ? 'var(--warning-soft)' : status === 'active' ? 'var(--success-soft)' : 'var(--danger-soft)',
@@ -156,7 +164,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ⚡ Upgrade Plan
         </button>
       </div>
-
       <div
         style={{
           borderTop: '1px solid var(--border)',
@@ -183,13 +190,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
     </aside>
   );
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Desktop sidebar */}
+      {}
       <div className="sidebar-desktop">{sidebar}</div>
-
-      {/* Mobile drawer */}
+      {}
       {drawerOpen ? (
         <div
           onClick={() => setDrawerOpen(false)}
@@ -203,9 +208,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div onClick={e => e.stopPropagation()}>{sidebar}</div>
         </div>
       ) : null}
-
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        {/* Top bar */}
+        {}
         <header
           style={{
             display: 'flex',
@@ -230,7 +234,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Language Picker Dropdown */}
+            {}
             <select
               value={lang}
               onChange={e => setLang(e.target.value as any)}
@@ -252,7 +256,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </option>
               ))}
             </select>
-
             <button
               onClick={() => navigate('/upgrade')}
               className="btn btn-sm"
@@ -269,7 +272,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               ⚡ Upgrade Plan
             </button>
-
             <a
               href="/BusinessSathi.apk"
               download="BusinessSathi.apk"
@@ -280,9 +282,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </a>
           </div>
         </header>
-
         <ExpiryReminder />
-
         <div
           className="page-enter"
           style={{ padding: '24px 22px', maxWidth: 1080, width: '100%', margin: '0 auto' }}
@@ -290,7 +290,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
-
       <style>{`
         .sidebar-desktop { display: block; }
         .mobile-only { display: none; }

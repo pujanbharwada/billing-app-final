@@ -1,22 +1,39 @@
 import { useState } from 'react';
+
 import { Link, useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useToast } from '../components/Toast';
+
 import { Button, TextField } from '../components/UI';
+
 import { APP_NAME, TRIAL_DAYS } from '../config/constants';
+
 import { STORE_TYPE_LIST, type StoreType } from '../config/storeTypes';
+
 import { rememberPendingStoreType } from '../context/SettingsContext';
+
 import { AuthShell } from './AuthShell';
 
 export function SignupPage() {
+
   const { signUp } = useAuth();
+
   const { toast } = useToast();
+
   const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
+
   const [password, setPassword] = useState('');
+
   const [confirm, setConfirm] = useState('');
+
   const [storeType, setStoreType] = useState<StoreType>('grocery');
+
   const [error, setError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   async function handleSignup(e: React.FormEvent) {
@@ -35,18 +52,17 @@ export function SignupPage() {
     }
     setLoading(true);
     setError(null);
+
     const res = await signUp(email, password);
     setLoading(false);
     if (res.error) {
       setError(res.error);
       return;
     }
-    // Apply this store type when the account's settings row is first created.
     rememberPendingStoreType(storeType);
     toast('Account created 🎉 You can now log in.', 'success');
     navigate('/login');
   }
-
   return (
     <AuthShell
       title={`Create your ${APP_NAME}`}

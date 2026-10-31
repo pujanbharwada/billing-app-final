@@ -1,14 +1,19 @@
-// ---------------------------------------------------------------------------
-// PUBLIC DIGITAL STOREFRONT & ONLINE CATALOG PAGE (/store/:userId)
-// ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
+
 import { useParams } from 'react-router-dom';
+
 import { supabase } from '../lib/supabase';
+
 import type { Item, Settings } from '../types/models';
+
 import { formatCurrency } from '../utils/format';
+
 import { Spinner, Card, Button } from '../components/UI';
+
 import { getStoreConfig } from '../config/storeTypes';
+
 import { createOnlineOrder, type OnlineOrder } from '../services/onlineOrderService';
+
 import html2pdf from 'html2pdf.js';
 
 function escHtml(s: string): string {
@@ -21,19 +26,30 @@ type CartItem = {
 };
 
 export function PublicStorePage() {
-  const { userId } = useParams<{ userId: string }>();
-  const [loading, setLoading] = useState(true);
-  const [shopSettings, setShopSettings] = useState<Settings | null>(null);
-  const [itemList, setItemList] = useState<Item[]>([]);
-  const [search, setSearch] = useState('');
-  const [cart, setCart] = useState<Record<string, CartItem>>({});
-  const [custName, setCustName] = useState('');
-  const [custPhone, setCustPhone] = useState('');
-  const [custAddress, setCustAddress] = useState('');
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
-  const [placedOrder, setPlacedOrder] = useState<OnlineOrder | null>(null);
-  const [submittingOrder, setSubmittingOrder] = useState(false);
 
+  const { userId } = useParams<{ userId: string }>();
+
+  const [loading, setLoading] = useState(true);
+
+  const [shopSettings, setShopSettings] = useState<Settings | null>(null);
+
+  const [itemList, setItemList] = useState<Item[]>([]);
+
+  const [search, setSearch] = useState('');
+
+  const [cart, setCart] = useState<Record<string, CartItem>>({});
+
+  const [custName, setCustName] = useState('');
+
+  const [custPhone, setCustPhone] = useState('');
+
+  const [custAddress, setCustAddress] = useState('');
+
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+
+  const [placedOrder, setPlacedOrder] = useState<OnlineOrder | null>(null);
+
+  const [submittingOrder, setSubmittingOrder] = useState(false);
   useEffect(() => {
     if (!userId) return;
 
@@ -41,21 +57,20 @@ export function PublicStorePage() {
       setLoading(true);
       try {
         // Fetch shop settings (store name, logo, address, phone)
+
         const { data: setRes } = await supabase
           .from('settings')
           .select('*')
           .eq('user_id', userId)
           .maybeSingle();
-
         if (setRes) setShopSettings(setRes as Settings);
-
         // Fetch shop items catalog
+
         const { data: itemRes } = await supabase
           .from('items')
           .select('*')
           .eq('user_id', userId)
           .order('item_name', { ascending: true });
-
         if (itemRes) setItemList(itemRes as Item[]);
       } catch (e) {
         console.error('Error loading store data:', e);
@@ -63,13 +78,14 @@ export function PublicStorePage() {
         setLoading(false);
       }
     }
-
     loadStoreData();
   }, [userId]);
 
   function addToCart(it: Item) {
     setCart(prev => {
+
       const existing = prev[it.id]?.qty || 0;
+
       const maxStock = it.stock_qty ?? 0;
       if (existing + 1 > maxStock) return prev; // Don't exceed available stock
       return {
@@ -81,8 +97,10 @@ export function PublicStorePage() {
 
   function removeFromCart(itId: string) {
     setCart(prev => {
+
       const existing = prev[itId]?.qty || 0;
       if (existing <= 1) {
+
         const copy = { ...prev };
         delete copy[itId];
         return copy;
@@ -95,8 +113,11 @@ export function PublicStorePage() {
   }
 
   const store = getStoreConfig(shopSettings?.store_type);
+
   const shopName = shopSettings?.shop_name || 'Online Catalog Store';
+
   const phone = shopSettings?.phone || '';
+
   const address = shopSettings?.address || '';
 
   const filteredItems = itemList.filter(it =>
@@ -104,7 +125,9 @@ export function PublicStorePage() {
   );
 
   const cartList = Object.values(cart);
+
   const cartItemCount = cartList.reduce((sum, i) => sum + i.qty, 0);
+
   const cartTotal = cartList.reduce((sum, i) => sum + (i.item.default_rate ?? 0) * i.qty, 0);
 
   async function handleConfirmOrder() {
@@ -113,9 +136,9 @@ export function PublicStorePage() {
       return;
     }
     if (!userId) return;
-
     setSubmittingOrder(true);
     try {
+
       const formattedItems = cartList.map(c => ({
         item_id: c.item.id,
         item_name: c.item.item_name,
@@ -132,7 +155,6 @@ export function PublicStorePage() {
         items: formattedItems,
         totalAmount: cartTotal,
       });
-
       setPlacedOrder(created);
       setOrderModalOpen(false);
       setCart({});
@@ -150,6 +172,7 @@ export function PublicStorePage() {
     }
 
     const cleanPhone = phone.replace(/[^0-9]/g, '');
+
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
 
     const itemLines = ord.items
@@ -170,11 +193,11 @@ export function PublicStorePage() {
     ]
       .filter(Boolean)
       .join('\n');
-
     window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 
   function downloadCustomerInvoicePdf(ord: OnlineOrder) {
+
     const itemRows = ord.items
       .map(
         i => `<tr>
@@ -215,13 +238,11 @@ export function PublicStorePage() {
             <div class="muted">Date: ${new Date(ord.created_at).toLocaleDateString()}</div>
           </div>
         </div>
-
         <div style="margin-top:14px; background:#F9FAFB; padding:10px; border-radius:6px; font-size:13px">
           <div><strong>Billed To:</strong> ${escHtml(ord.customer_name)}</div>
           ${ord.customer_phone ? `<div><strong>Phone:</strong> ${escHtml(ord.customer_phone || '')}</div>` : ''}
           ${ord.customer_address ? `<div><strong>Address:</strong> ${escHtml(ord.customer_address || '')}</div>` : ''}
         </div>
-
         <table>
           <thead>
             <tr>
@@ -239,7 +260,6 @@ export function PublicStorePage() {
             </tr>
           </tbody>
         </table>
-
         <div style="margin-top:30px; display:flex; justify-content:space-between; align-items:flex-end;">
           <div style="font-size:11px; color:#6B7280">
             <div>Thank you for your order!</div>
@@ -253,7 +273,6 @@ export function PublicStorePage() {
         </div>
       </body>
     </html>`;
-
     html2pdf()
       .set({
         margin: 10,
@@ -265,9 +284,7 @@ export function PublicStorePage() {
       .from(html)
       .save();
   }
-
   if (loading) return <Spinner text="Loading shop catalog..." />;
-
   // Render Placed Order Confirmation View if Order complete!
   if (placedOrder) {
     return (
@@ -278,7 +295,6 @@ export function PublicStorePage() {
           <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
             Thank you for ordering from <strong>{shopName}</strong>
           </div>
-
           <div style={{ background: 'var(--primary-soft)', border: '1px solid var(--primary)', padding: '12px 16px', borderRadius: 8, margin: '20px 0', textAlign: 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span className="muted">Order Number:</span>
@@ -293,7 +309,6 @@ export function PublicStorePage() {
               <strong style={{ fontSize: 17, color: 'var(--primary)' }}>{formatCurrency(placedOrder.total_amount)}</strong>
             </div>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Button
               title="📄 Download Tax Invoice PDF"
@@ -318,7 +333,6 @@ export function PublicStorePage() {
       </div>
     );
   }
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)', color: 'var(--text)', paddingBottom: 100 }}>
       {/* Store Header */}
@@ -384,7 +398,6 @@ export function PublicStorePage() {
           </a>
         </div>
       </header>
-
       {/* Main Catalog Content */}
       <div style={{ maxWidth: 800, margin: '20px auto', padding: '0 16px' }}>
         {/* Search Bar */}
@@ -398,13 +411,11 @@ export function PublicStorePage() {
             style={{ width: '100%', fontSize: 15, padding: '12px 16px', borderRadius: 'var(--radius-md)' }}
           />
         </div>
-
         {/* Item Count Subtitle */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <strong style={{ fontSize: 16 }}>Available Products ({filteredItems.length})</strong>
           <span className="badge badge-success">Live Stock</span>
         </div>
-
         {/* Product List Grid */}
         {filteredItems.length === 0 ? (
           <Card style={{ textAlign: 'center', padding: 40 }}>
@@ -417,10 +428,12 @@ export function PublicStorePage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
             {filteredItems.map(it => {
-              const inCartQty = cart[it.id]?.qty || 0;
-              const hasStock = (it.stock_qty ?? 0) > 0;
-              const price = it.default_rate ?? 0;
 
+              const inCartQty = cart[it.id]?.qty || 0;
+
+              const hasStock = (it.stock_qty ?? 0) > 0;
+
+              const price = it.default_rate ?? 0;
               return (
                 <Card
                   key={it.id}
@@ -434,12 +447,10 @@ export function PublicStorePage() {
                 >
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{it.item_name}</div>
-
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                       <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>
                         {formatCurrency(price)}
                       </span>
-
                       <span
                         style={{
                           fontSize: 11,
@@ -454,7 +465,6 @@ export function PublicStorePage() {
                       </span>
                     </div>
                   </div>
-
                   <div style={{ marginTop: 14 }}>
                     {inCartQty === 0 ? (
                       <Button
@@ -500,7 +510,6 @@ export function PublicStorePage() {
           </div>
         )}
       </div>
-
       {/* Floating Bottom Cart Bar */}
       {cartItemCount > 0 && (
         <div
@@ -525,7 +534,6 @@ export function PublicStorePage() {
                 {formatCurrency(cartTotal)}
               </div>
             </div>
-
             <Button
               title="Checkout & Order →"
               variant="primary"
@@ -534,7 +542,6 @@ export function PublicStorePage() {
           </div>
         </div>
       )}
-
       {/* Order Details Confirmation Popup */}
       {orderModalOpen && (
         <div
@@ -556,7 +563,6 @@ export function PublicStorePage() {
               <p className="muted" style={{ marginTop: -6, fontSize: 13 }}>
                 Enter your details to complete your order with <strong>{shopName}</strong>.
               </p>
-
               <div style={{ margin: '14px 0', background: 'var(--surface-2)', padding: 12, borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>Order Items ({cartItemCount}):</div>
                 {cartList.map(c => (
@@ -570,7 +576,6 @@ export function PublicStorePage() {
                   <span style={{ color: 'var(--primary)' }}>{formatCurrency(cartTotal)}</span>
                 </div>
               </div>
-
               <div style={{ marginBottom: 10 }}>
                 <label className="field-label">Your Name *</label>
                 <input
@@ -580,7 +585,6 @@ export function PublicStorePage() {
                   onChange={e => setCustName(e.target.value)}
                 />
               </div>
-
               <div style={{ marginBottom: 10 }}>
                 <label className="field-label">Your Phone Number</label>
                 <input
@@ -590,7 +594,6 @@ export function PublicStorePage() {
                   onChange={e => setCustPhone(e.target.value)}
                 />
               </div>
-
               <div style={{ marginBottom: 16 }}>
                 <label className="field-label">Delivery Address</label>
                 <textarea
@@ -602,7 +605,6 @@ export function PublicStorePage() {
                   style={{ height: 'auto', padding: 8 }}
                 />
               </div>
-
               <div style={{ display: 'flex', gap: 10 }}>
                 <Button title="Cancel" variant="ghost" onClick={() => setOrderModalOpen(false)} />
                 <Button title="✅ Submit Order" variant="primary" block loading={submittingOrder} onClick={handleConfirmOrder} />

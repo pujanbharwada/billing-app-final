@@ -1,16 +1,17 @@
-// ---------------------------------------------------------------------------
-// INVOICE (web) — build a printable, store-aware invoice with the shop's
-// profile header (logo, name, phone, address), store-specific columns
-// (batch/expiry, size/HSN, serial/warranty…), and a full discount/tax
-// breakdown. Then PRINT (browser dialog), DOWNLOAD as a real PDF, or SHARE.
-// ---------------------------------------------------------------------------
 import html2pdf from 'html2pdf.js';
+
 import { Capacitor } from '@capacitor/core';
+
 import { Filesystem, Directory } from '@capacitor/filesystem';
+
 import { Share } from '@capacitor/share';
+
 import type { Bill, BillItem, Settings } from '../types/models';
+
 import { formatCurrency, formatDateTime } from './format';
+
 import { APP_NAME } from '../config/constants';
+
 import { getStoreConfig } from '../config/storeTypes';
 
 const META_LABELS: Record<string, string> = {
@@ -21,6 +22,7 @@ const META_LABELS: Record<string, string> = {
   serial: 'Serial / Model',
   warranty: 'Warranty (mo.)',
 };
+
 const META_ORDER = ['size', 'batch_no', 'expiry_date', 'hsn', 'serial', 'warranty'];
 
 function esc(s: string): string {
@@ -30,27 +32,31 @@ function esc(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
 // Turn a bill number into a filesystem-safe PDF filename (strips slashes,
 // spaces, and anything that would break a download name or native file path).
+
 function safeFileName(billNumber?: string): string {
+
   const base =
     String(billNumber || 'invoice')
       .replace(/[^a-zA-Z0-9._-]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'invoice';
   return `${base}.pdf`;
 }
-
 // The invoice markup (inline-styled, self-contained — no app CSS needed).
+
 export function invoiceInnerHtml(
   bill: Bill,
   items: BillItem[],
   settings?: Settings | null,
 ): string {
+
   const store = getStoreConfig(bill.extra?.store_type ?? settings?.store_type);
+
   const presentMeta = META_ORDER.filter(k =>
     items.some(it => it.meta && it.meta[k]),
   );
+
   const showDisc = items.some(it => (it.discount ?? 0) > 0);
 
   const headCells = [
@@ -64,6 +70,7 @@ export function invoiceInnerHtml(
 
   const bodyRows = items
     .map(it => {
+
       const metaCells = presentMeta
         .map(k => `<td>${esc(it.meta?.[k] ?? '—')}</td>`)
         .join('');
@@ -79,8 +86,11 @@ export function invoiceInnerHtml(
     .join('');
 
   const subtotal = bill.subtotal ?? items.reduce((s, it) => s + it.total, 0);
+
   const discount = bill.discount_amount ?? 0;
+
   const serviceCharge = Number(bill.extra?.service_charge_amount ?? 0);
+
   const tax = bill.tax_amount ?? 0;
 
   const breakdown = [
@@ -98,11 +108,15 @@ export function invoiceInnerHtml(
   ].join('');
 
   const shopName = settings?.shop_name || APP_NAME;
+
   const isDataUrl = settings?.logo_url?.startsWith('data:');
+
   const crossAttr = isDataUrl ? '' : ' crossorigin="anonymous"';
+
   const logo = settings?.logo_url
     ? `<img src="${esc(settings.logo_url)}"${crossAttr} style="width:54px;height:54px;border-radius:8px;object-fit:cover" />`
     : `<div style="font-size:42px">${store.emoji}</div>`;
+
   const contact = [settings?.phone, settings?.address]
     .filter(Boolean)
     .map(x => esc(String(x)))
@@ -114,7 +128,6 @@ export function invoiceInnerHtml(
   ]
     .filter(Boolean)
     .join(' ');
-
   return `
   <div class="inv">
     <style>
@@ -147,7 +160,6 @@ export function invoiceInnerHtml(
         ${orderMeta ? `<div class="muted">${orderMeta}</div>` : ''}
       </div>
     </div>
-
     <div style="margin-top:16px; padding:12px; background:#F9FAFB; border:1px solid #E5E7EB; border-radius:6px; font-size:13px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
       <div>
         <div style="font-weight:700; color:#2563EB; margin-bottom:3px;">${esc(store.customerLabel ? 'Patient Details' : 'Billed To')}</div>
@@ -162,14 +174,11 @@ export function invoiceInnerHtml(
       </div>
       ` : ''}
     </div>
-
     <table>
       <thead><tr>${headCells}</tr></thead>
       <tbody>${bodyRows}</tbody>
     </table>
-
     <table class="totals">${breakdown}</table>
-
     <div style="margin-top: 36px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid;">
       <div style="font-size: 11px; color: #6B7280; max-width: 300px;">
         ${bill.extra?.notes ? `<div style="font-size: 13px; color: #374151; margin-bottom: 8px;"><strong>Notes:</strong> ${esc(String(bill.extra.notes))}</div>` : ''}
@@ -215,58 +224,68 @@ function pdfWorker(fileName: string) {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     });
 }
-
 // Build the PDF and return its raw base64 (no data-URI prefix) — used on
 // native, where we hand the bytes to the Filesystem/Share plugins.
+
 async function invoicePdfBase64(
   bill: Bill,
   items: BillItem[],
   settings?: Settings | null,
 ): Promise<string> {
+
   const fileName = safeFileName(bill.bill_number);
+
   const htmlInner = invoiceInnerHtml(bill, items, settings);
+
   const html = fullDoc(htmlInner, bill.bill_number);
+
   const dataUri = (await pdfWorker(fileName).from(html).outputPdf('datauristring')) as string;
+
   const comma = dataUri.indexOf('base64,');
   return comma >= 0 ? dataUri.slice(comma + 'base64,'.length) : dataUri;
 }
-
 // On native devices, write the PDF to disk and open the standard share sheet.
+
 async function sharePdfNative(
   bill: Bill,
   items: BillItem[],
   settings: Settings | null,
   dialogTitle: string,
 ): Promise<void> {
+
   const base64 = await invoicePdfBase64(bill, items, settings);
+
   const fileName = safeFileName(bill.bill_number);
+
   const writeRes = await Filesystem.writeFile({
     path: fileName,
     data: base64,
     directory: Directory.Cache,
   });
-
   await Share.share({
     title: dialogTitle,
     text: `Invoice ${bill.bill_number} for ${bill.customer_name}`,
     url: writeRes.uri,
   });
 }
-
 // PRINT — browser print dialog on the web; on native (Android/iOS WebView there
 // is no print dialog) fall back to the PDF + native share/print sheet.
+
 export async function printInvoice(
   bill: Bill,
   items: BillItem[],
   settings?: Settings | null,
 ): Promise<void> {
+
   const htmlInner = invoiceInnerHtml(bill, items, settings);
   if (isNative()) {
     await sharePdfNative(bill, items, settings ?? null, 'Print invoice');
     return;
   }
+
   const html = fullDoc(htmlInner, bill.bill_number);
   await new Promise<void>((resolve, reject) => {
+
     const iframe = document.createElement('iframe');
     iframe.setAttribute('aria-hidden', 'true');
     iframe.style.position = 'fixed';
@@ -277,6 +296,7 @@ export async function printInvoice(
     iframe.style.border = '0';
 
     let settled = false;
+
     const finish = () => {
       if (settled) return;
       settled = true;
@@ -284,10 +304,10 @@ export async function printInvoice(
       setTimeout(() => iframe.remove(), 1000);
       resolve();
     };
-
     // Attach the load handler BEFORE the document exists, so the load event
     // cannot fire before we're listening (the old doc.write race).
     iframe.onload = () => {
+
       const win = iframe.contentWindow;
       if (!win) {
         iframe.remove();
@@ -306,16 +326,15 @@ export async function printInvoice(
       // Safety net for browsers that never fire afterprint.
       setTimeout(finish, 60000);
     };
-
     // srcdoc lets the browser own the document lifecycle → reliable onload.
     iframe.srcdoc = html;
     document.body.appendChild(iframe);
   });
 }
-
 // Generate a real PDF. On the web this downloads the file directly; on native
 // the browser download API is unavailable, so we save it and open the share/
 // print sheet instead.
+
 export async function downloadInvoicePdf(
   bill: Bill,
   items: BillItem[],
@@ -325,8 +344,11 @@ export async function downloadInvoicePdf(
     await sharePdfNative(bill, items, settings ?? null, 'Save or share invoice');
     return;
   }
+
   const fileName = safeFileName(bill.bill_number);
+
   const htmlInner = invoiceInnerHtml(bill, items, settings);
+
   const html = fullDoc(htmlInner, bill.bill_number);
   try {
     await pdfWorker(fileName).from(html).save();
@@ -336,24 +358,31 @@ export async function downloadInvoicePdf(
     // A remote logo that can't be fetched (CORS) can break rasterisation.
     // Retry once without it so the invoice still downloads.
     if (!settings?.logo_url) throw err;
+
     const htmlInner2 = invoiceInnerHtml(bill, items, { ...settings, logo_url: null });
+
     const html2 = fullDoc(htmlInner2, bill.bill_number);
     await pdfWorker(fileName).from(html2).save();
   }
 }
-
 // A plain-text version for sharing as a message (WhatsApp, SMS, etc.).
+
 export function buildInvoiceText(
   bill: Bill,
   items: BillItem[],
   settings?: Settings | null,
 ): string {
+
   const store = getStoreConfig(bill.extra?.store_type ?? settings?.store_type);
+
   const shopName = settings?.shop_name || APP_NAME;
+
   const lines = items.map(
     it => `• ${it.item_name}  —  ${it.qty} x ${formatCurrency(it.rate)} = ${formatCurrency(it.total)}`,
   );
+
   const custLabel = store.customerLabel ?? 'Customer';
+
   const headerLines = [
     `${shopName} — Invoice ${bill.bill_number}`,
     formatDateTime(bill.created_at),
@@ -362,7 +391,6 @@ export function buildInvoiceText(
     bill.extra?.doctor_name ? `Prescribing Doctor: ${bill.extra.doctor_name}` : '',
     bill.extra?.doctor_address ? `Doctor Address: ${bill.extra.doctor_address}` : '',
   ].filter(Boolean);
-
   return [
     ...headerLines,
     '',
@@ -371,15 +399,15 @@ export function buildInvoiceText(
     `Grand Total: ${formatCurrency(bill.total_amount)}`,
   ].join('\n');
 }
-
 // Share the invoice: native share sheet if supported, else open WhatsApp.
+
 export async function shareInvoice(
   bill: Bill,
   items: BillItem[],
   settings?: Settings | null,
 ): Promise<void> {
-  const text = buildInvoiceText(bill, items, settings);
 
+  const text = buildInvoiceText(bill, items, settings);
   // Native: use the Capacitor Share plugin (WebView has no navigator.share).
   if (isNative()) {
     await Share.share({ title: `Invoice ${bill.bill_number}`, text });

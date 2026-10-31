@@ -1,15 +1,15 @@
-// ---------------------------------------------------------------------------
-// ITEMS — like Customers, but items have an optional default rate. When the
-// admin has enabled INVENTORY for this account, items also carry stock: a
-// current quantity, a reorder level, cost price, and a "Stock in / adjust"
-// action. Search + paginated list, add/edit modal, delete.
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSubscription } from '../context/SubscriptionContext';
+
 import { useDebounce } from '../hooks/useDebounce';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, EmptyState, Modal, Spinner, TextField } from '../components/UI';
+
 import {
   createItem,
   deleteItem,
@@ -17,21 +17,26 @@ import {
   getItemCount,
   updateItem,
 } from '../services/itemService';
+
 import { adjustStock, type StockReason } from '../services/inventoryService';
+
 import type { Item } from '../types/models';
+
 import { formatCurrency, toNumber } from '../utils/format';
 
 const PAGE = 30;
 
-// --- CSV import helpers ---------------------------------------------------
-// Expected columns (header optional): name, rate, stock, reorder, cost
 type CsvRow = { name: string; rate: string; stock: string; reorder: string; cost: string };
 
 function splitCsvLine(line: string): string[] {
+
   const out: string[] = [];
+
   let cur = '';
+
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
+
     const c = line[i];
     if (inQuotes) {
       if (c === '"') {
@@ -51,12 +56,15 @@ function splitCsvLine(line: string): string[] {
 }
 
 function parseCsv(text: string): CsvRow[] {
+
   const cleanText = text.replace(/^\uFEFF/, '');
+
   const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
-  // Skip a header row if the first line looks like column names.
+
   const start = /(^|,)\s*name\s*(,|$)/i.test(lines[0]) ? 1 : 0;
   return lines.slice(start).map(line => {
+
     const c = splitCsvLine(line);
     return { name: c[0] ?? '', rate: c[1] ?? '', stock: c[2] ?? '', reorder: c[3] ?? '', cost: c[4] ?? '' };
   });
@@ -65,38 +73,57 @@ function parseCsv(text: string): CsvRow[] {
 import { StorefrontUnlockCard } from '../components/StorefrontUnlockCard';
 
 export function ItemsPage() {
+
   const { user } = useAuth();
+
   const { inventoryEnabled } = useSubscription();
+
   const { toast, confirm } = useToast();
+
   const [query, setQuery] = useState('');
+
   const debounced = useDebounce(query, 300);
 
   const [items, setItems] = useState<Item[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [loadingMore, setLoadingMore] = useState(false);
+
   const [hasMore, setHasMore] = useState(true);
 
-  // Add / edit modal.
   const [modalOpen, setModalOpen] = useState(false);
+
   const [editing, setEditing] = useState<Item | null>(null);
+
   const [nameInput, setNameInput] = useState('');
+
   const [rateInput, setRateInput] = useState('');
+
   const [trackInput, setTrackInput] = useState(false);
+
   const [reorderInput, setReorderInput] = useState('');
+
   const [costInput, setCostInput] = useState('');
+
   const [openingInput, setOpeningInput] = useState('');
+
   const [saving, setSaving] = useState(false);
 
-  // Stock-in / adjust modal.
   const [adjustItem, setAdjustItem] = useState<Item | null>(null);
+
   const [adjustDelta, setAdjustDelta] = useState('');
+
   const [adjustReason, setAdjustReason] = useState<StockReason>('restock');
+
   const [adjustNote, setAdjustNote] = useState('');
+
   const [adjustSaving, setAdjustSaving] = useState(false);
 
-  // CSV bulk import.
   const [importOpen, setImportOpen] = useState(false);
+
   const [csvText, setCsvText] = useState('');
+
   const [importing, setImporting] = useState(false);
 
   const [totalItemCount, setTotalItemCount] = useState(0);
@@ -104,9 +131,11 @@ export function ItemsPage() {
   const loadFirst = useCallback(async () => {
     setLoading(true);
     try {
+
       const page = await fetchItemsPage({ search: debounced, limit: PAGE, offset: 0 });
       setItems(page);
       setHasMore(page.length === PAGE);
+
       const count = await getItemCount();
       setTotalItemCount(count);
     } catch (e: any) {
@@ -115,7 +144,6 @@ export function ItemsPage() {
       setLoading(false);
     }
   }, [debounced, toast]);
-
   useEffect(() => {
     loadFirst();
   }, [loadFirst]);
@@ -124,6 +152,7 @@ export function ItemsPage() {
     if (loadingMore || loading || !hasMore) return;
     setLoadingMore(true);
     try {
+
       const page = await fetchItemsPage({ search: debounced, limit: PAGE, offset: items.length });
       setItems(prev => [...prev, ...page]);
       setHasMore(page.length === PAGE);
@@ -142,6 +171,7 @@ export function ItemsPage() {
     setOpeningInput('');
     setModalOpen(true);
   }
+
   function openEdit(it: Item) {
     setEditing(it);
     setNameInput(it.item_name);
@@ -154,9 +184,12 @@ export function ItemsPage() {
   }
 
   async function save() {
+
     const name = nameInput.trim();
     if (!name || !user) return;
+
     const rate = rateInput.trim() ? toNumber(rateInput) : null;
+
     const stockFields = inventoryEnabled
       ? {
           track_stock: trackInput,
@@ -168,16 +201,16 @@ export function ItemsPage() {
     try {
       if (editing) {
         await updateItem(editing.id, { item_name: name, default_rate: rate, ...(stockFields ?? {}) });
-        // Optionally add to stock from the edit screen (handy for existing items
-        // you're only now starting to track).
         if (inventoryEnabled && trackInput && openingInput.trim()) {
+
           const add = toNumber(openingInput);
           if (add) await adjustStock(editing.id, add, 'adjustment', 'Added from edit');
         }
       } else {
+
         const created = await createItem(user.id, name, rate, stockFields);
-        // Record opening stock as a movement so the ledger stays the source of truth.
         if (inventoryEnabled && trackInput && openingInput.trim()) {
+
           const opening = toNumber(openingInput);
           if (opening) await adjustStock(created.id, opening, 'opening', 'Opening stock');
         }
@@ -194,6 +227,7 @@ export function ItemsPage() {
 
   async function saveAdjust() {
     if (!adjustItem) return;
+
     const delta = toNumber(adjustDelta);
     if (!delta) {
       toast('Enter a non-zero quantity (use a negative number to reduce).', 'error');
@@ -214,21 +248,30 @@ export function ItemsPage() {
 
   async function runImport() {
     if (!user) return;
+
     const parsed = parseCsv(csvText).filter(r => r.name.trim());
     if (parsed.length === 0) {
       toast('Nothing to import — paste rows like: name, rate, stock, reorder, cost', 'error');
       return;
     }
     setImporting(true);
+
     let ok = 0;
+
     let failed = 0;
     for (const r of parsed) {
       try {
+
         const rate = r.rate.trim() ? toNumber(r.rate) : null;
+
         const stock = r.stock.trim() ? toNumber(r.stock) : 0;
+
         const reorder = r.reorder.trim() ? toNumber(r.reorder) : 0;
+
         const cost = r.cost.trim() ? toNumber(r.cost) : null;
+
         const track = true;
+
         const created = await createItem(
           user.id,
           r.name,
@@ -263,7 +306,6 @@ export function ItemsPage() {
       toast(e?.message ?? 'Could not delete.', 'error');
     }
   }
-
   return (
     <div>
       <div className="row spread" style={{ marginBottom: 16 }}>
@@ -273,9 +315,7 @@ export function ItemsPage() {
           <Button title="+ Add item" onClick={openAdd} />
         </div>
       </div>
-
       <StorefrontUnlockCard itemCount={totalItemCount} />
-
       <input
         className="input"
         value={query}
@@ -283,7 +323,6 @@ export function ItemsPage() {
         placeholder="Search items…"
         style={{ marginBottom: 16 }}
       />
-
       {loading ? (
         <Spinner />
       ) : items.length === 0 ? (
@@ -297,8 +336,11 @@ export function ItemsPage() {
       ) : (
         <>
           {items.map(it => {
+
             const tracked = inventoryEnabled && it.track_stock;
+
             const qty = it.stock_qty ?? 0;
+
             const low = tracked && qty <= (it.reorder_level ?? 0);
             return (
               <Card key={it.id}>
@@ -347,8 +389,7 @@ export function ItemsPage() {
           ) : null}
         </>
       )}
-
-      {/* Add / edit item */}
+      {}
       <Modal open={modalOpen} title={editing ? 'Edit item' : 'New item'} onClose={() => setModalOpen(false)}>
         <TextField
           label="Item name"
@@ -365,7 +406,6 @@ export function ItemsPage() {
           onKeyDown={e => e.key === 'Enter' && !inventoryEnabled && save()}
           placeholder="e.g. 350"
         />
-
         {inventoryEnabled ? (
           <>
             <label
@@ -379,7 +419,6 @@ export function ItemsPage() {
               />
               Track stock for this item
             </label>
-
             {trackInput ? (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <TextField
@@ -407,14 +446,12 @@ export function ItemsPage() {
             ) : null}
           </>
         ) : null}
-
         <div className="row gap-sm" style={{ marginTop: 8 }}>
           <Button title="Cancel" variant="ghost" block onClick={() => setModalOpen(false)} />
           <Button title="Save" block loading={saving} onClick={save} />
         </div>
       </Modal>
-
-      {/* Stock in / adjust */}
+      {}
       <Modal
         open={!!adjustItem}
         title={adjustItem ? `Stock — ${adjustItem.item_name}` : 'Stock'}
@@ -455,8 +492,7 @@ export function ItemsPage() {
           <Button title="Apply" block loading={adjustSaving} onClick={saveAdjust} />
         </div>
       </Modal>
-
-      {/* CSV bulk import */}
+      {}
       <Modal open={importOpen} title="Import items from CSV" onClose={() => setImportOpen(false)}>
         <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
           One item per line, columns in this order (a header row is optional):
@@ -471,8 +507,10 @@ export function ItemsPage() {
           type="file"
           accept=".csv,text/csv,text/plain"
           onChange={e => {
+
             const file = e.target.files?.[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = () => setCsvText(String(reader.result ?? ''));
             reader.readAsText(file);

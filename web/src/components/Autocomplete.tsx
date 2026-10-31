@@ -1,9 +1,5 @@
-// ---------------------------------------------------------------------------
-// Autocomplete — a text box that shows a live dropdown of suggestions as you
-// type, and fills in the value when you click one. Generic, so it works for
-// BOTH customers and items. Web port of the original AutocompleteInput.
-// ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
+
 import { useDebounce } from '../hooks/useDebounce';
 
 type Props<T> = {
@@ -31,25 +27,27 @@ export function Autocomplete<T>({
   minChars = 1,
   error,
 }: Props<T>) {
+
   const [suggestions, setSuggestions] = useState<T[]>([]);
+
   const [open, setOpen] = useState(false);
+
   const debounced = useDebounce(value, 250);
+
   const skipNextRef = useRef(false);
+
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Callers pass a fresh inline `fetchSuggestions` on every render. Keep the
-  // latest in a ref so the search effect can depend ONLY on the typed text —
-  // otherwise every unrelated parent re-render re-fired the search and re-opened
-  // the dropdown over whatever field the user had moved on to.
   const fetchRef = useRef(fetchSuggestions);
   fetchRef.current = fetchSuggestions;
-
   useEffect(() => {
     if (skipNextRef.current) {
       skipNextRef.current = false;
       return;
     }
+
     let active = true;
+
     const q = debounced.trim();
     if (q.length < minChars) {
       setSuggestions([]);
@@ -67,9 +65,8 @@ export function Autocomplete<T>({
       active = false;
     };
   }, [debounced, minChars]);
-
-  // Close when clicking outside.
   useEffect(() => {
+
     const onClick = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -85,7 +82,6 @@ export function Autocomplete<T>({
     setOpen(false);
     setSuggestions([]);
   }
-
   return (
     <div className="field" style={{ position: 'relative' }} ref={wrapRef}>
       {label ? <label className="field-label">{label}</label> : null}
@@ -95,8 +91,6 @@ export function Autocomplete<T>({
         placeholder={placeholder}
         autoComplete="off"
         onChange={e => {
-          // A real keystroke should always fetch — clear any pending skip left
-          // over from a selection that didn't change the text.
           skipNextRef.current = false;
           onChangeText(e.target.value);
         }}

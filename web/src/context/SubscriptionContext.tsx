@@ -1,6 +1,3 @@
-// ---------------------------------------------------------------------------
-// SUBSCRIPTION CONTEXT — PERMANENT UNLIMITED ACCESS & INVENTORY ENABLED
-// ---------------------------------------------------------------------------
 import {
   createContext,
   useCallback,
@@ -8,9 +5,13 @@ import {
   useEffect,
   useState,
 } from 'react';
+
 import type { PropsWithChildren } from 'react';
+
 import { useAuth } from './AuthContext';
+
 import type { Subscription } from '../types/models';
+
 import {
   computeStatus,
   getSubscription,
@@ -33,8 +34,11 @@ const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(
 );
 
 export function SubscriptionProvider({ children }: PropsWithChildren) {
+
   const { user } = useAuth();
+
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -42,6 +46,7 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     setLoading(true);
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
+
         const sub = await getSubscription(user.id);
         setSubscription(sub);
         setLoading(false);
@@ -56,7 +61,6 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
       }
     }
   }, [user]);
-
   useEffect(() => {
     refresh();
   }, [refresh]);
@@ -68,11 +72,10 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     status,
     daysLeft,
     isUsable: isAppUsable(subscription),
-    inventoryEnabled: true, // Permanent 100% enabled for all users
+    inventoryEnabled: true,
     loading,
     refresh,
   };
-
   return (
     <SubscriptionContext.Provider value={value}>
       {children}
@@ -81,6 +84,7 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
 }
 
 export function useSubscription(): SubscriptionContextValue {
+
   const ctx = useContext(SubscriptionContext);
   if (!ctx) {
     throw new Error('useSubscription must be used inside a <SubscriptionProvider>');

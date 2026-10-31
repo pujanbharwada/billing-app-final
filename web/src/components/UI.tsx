@@ -1,7 +1,3 @@
-// ---------------------------------------------------------------------------
-// SHARED UI PRIMITIVES — Button, Card, TextField, Spinner, EmptyState, Modal.
-// Web equivalents of the original app's src/components/common/* pieces.
-// ---------------------------------------------------------------------------
 import React, { useEffect } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -141,11 +137,11 @@ export function Modal({
 }) {
   useEffect(() => {
     if (!open) return;
+
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
-
   if (!open) return null;
   return (
     <div

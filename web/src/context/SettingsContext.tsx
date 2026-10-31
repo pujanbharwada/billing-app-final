@@ -1,9 +1,3 @@
-// ---------------------------------------------------------------------------
-// SETTINGS CONTEXT — loads the logged-in user's store type + shop profile once
-// and shares it with every page (billing form, invoices, sidebar). Creates the
-// row on first load, honouring a store type the user picked at signup (stashed
-// in localStorage). Call `save()` to persist changes.
-// ---------------------------------------------------------------------------
 import {
   createContext,
   useCallback,
@@ -11,14 +5,19 @@ import {
   useEffect,
   useState,
 } from 'react';
+
 import { useAuth } from './AuthContext';
+
 import type { Settings } from '../types/models';
+
 import {
   ensureSettings,
   getSettings,
   saveSettings,
 } from '../services/settingsService';
+
 import { getStoreConfig, type StoreTypeConfig } from '../config/storeTypes';
+
 import { applyBranding } from '../utils/branding';
 
 const PENDING_STORE_KEY = 'pending_store_type';
@@ -36,20 +35,25 @@ const SettingsContext = createContext<SettingsContextValue | undefined>(
 );
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+
   const { user } = useAuth();
+
   const [settings, setSettings] = useState<Settings | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) return;
+
     const s = await getSettings(user.id);
     setSettings(s);
   }, [user]);
-
   useEffect(() => {
     if (!user) return;
+
     let active = true;
     setLoading(true);
+
     const pending = localStorage.getItem(PENDING_STORE_KEY) || 'grocery';
     ensureSettings(user.id, pending)
       .then(s => {
@@ -63,9 +67,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, [user]);
-
-  // Keep the browser tab + installable home-screen icon/name in sync with the
-  // shop's saved logo + name (per-user branding).
   useEffect(() => {
     applyBranding(settings);
   }, [settings]);
@@ -73,6 +74,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const save = useCallback(
     async (patch: Partial<Omit<Settings, 'user_id'>>) => {
       if (!user) return;
+
       const updated = await saveSettings(user.id, patch);
       setSettings(updated);
     },
@@ -86,7 +88,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     refresh,
     save,
   };
-
   return (
     <SettingsContext.Provider value={value}>
       {children}
@@ -95,13 +96,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useSettings(): SettingsContextValue {
+
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error('useSettings must be used inside <SettingsProvider>');
   return ctx;
 }
 
-// Remember the store type a visitor chose on the signup form, to apply once
-// their settings row is first created.
 export function rememberPendingStoreType(t: string) {
   localStorage.setItem(PENDING_STORE_KEY, t);
 }

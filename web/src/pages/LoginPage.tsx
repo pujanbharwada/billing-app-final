@@ -1,15 +1,25 @@
 import { useState } from 'react';
+
 import { Link } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { Button, TextField } from '../components/UI';
+
 import { APP_NAME } from '../config/constants';
+
 import { AuthShell } from './AuthShell';
 
 export function LoginPage() {
+
   const { signIn } = useAuth();
+
   const [email, setEmail] = useState('');
+
   const [password, setPassword] = useState('');
+
   const [error, setError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
@@ -20,12 +30,11 @@ export function LoginPage() {
     }
     setLoading(true);
     setError(null);
+
     const res = await signIn(email, password);
     setLoading(false);
     if (res.error) setError(res.error);
-    // On success, auth state changes and the app routes automatically.
   }
-
   return (
     <AuthShell title="Welcome Back" subtitle="Log in to your account to continue">
       <form onSubmit={handleLogin}>

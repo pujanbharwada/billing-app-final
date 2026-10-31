@@ -1,8 +1,5 @@
-// ---------------------------------------------------------------------------
-// ANALYTICS SERVICE — lightweight aggregates for the dashboard.
-// Strictly filtered by user_id for complete multi-tenant account isolation!
-// ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
+
 import type { Bill } from '../types/models';
 
 export type DashboardStats = {
@@ -16,6 +13,7 @@ export type DashboardStats = {
 };
 
 async function headCount(table: string, userId: string): Promise<number> {
+
   const { count, error } = await supabase
     .from(table)
     .select('*', { count: 'exact', head: true })
@@ -25,9 +23,10 @@ async function headCount(table: string, userId: string): Promise<number> {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const { data: userData } = await supabase.auth.getUser();
-  const userId = userData.user?.id;
 
+  const { data: userData } = await supabase.auth.getUser();
+
+  const userId = userData.user?.id;
   if (!userId) {
     return {
       customers: 0,
@@ -51,14 +50,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-
   if (error) throw new Error(error.message);
+
   const all = (data ?? []) as Bill[];
 
   const now = new Date();
+
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 
   let revenueTotal = 0;
+
   let revenueThisMonth = 0;
   for (const b of all) {
     revenueTotal += b.total_amount;
@@ -67,13 +68,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     }
   }
 
-  // Revenue for each of the last 7 days (oldest → newest).
   const last7: { label: string; total: number }[] = [];
   for (let i = 6; i >= 0; i--) {
+
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+
     const next = new Date(day.getTime() + 86400000);
+
     const total = all
       .filter(b => {
+
         const t = new Date(b.created_at).getTime();
         return t >= day.getTime() && t < next.getTime();
       })
@@ -83,7 +87,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       total,
     });
   }
-
   return {
     customers,
     items,

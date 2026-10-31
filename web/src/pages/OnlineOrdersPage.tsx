@@ -1,14 +1,13 @@
-// ---------------------------------------------------------------------------
-// ONLINE ORDERS PAGE (FOR SHOPKEEPER)
-// ---------------------------------------------------------------------------
-// Shows incoming orders placed by customers through the public storefront!
-// Orders marked COMPLETED automatically self-delete after 5 minutes!
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, Spinner, EmptyState } from '../components/UI';
+
 import {
   fetchOnlineOrders,
   updateOrderStatus,
@@ -16,18 +15,25 @@ import {
   deductInventoryForOrder,
   type OnlineOrder,
 } from '../services/onlineOrderService';
+
 import { formatCurrency, formatDateTime } from '../utils/format';
 
 export function OnlineOrdersPage() {
+
   const { user } = useAuth();
+
   const { toast } = useToast();
+
   const navigate = useNavigate();
+
   const [orders, setOrders] = useState<OnlineOrder[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const loadOrders = useCallback(async () => {
     if (!user) return;
     try {
+
       const data = await fetchOnlineOrders(user.id);
       setOrders(data);
     } catch (e: any) {
@@ -36,24 +42,20 @@ export function OnlineOrdersPage() {
       setLoading(false);
     }
   }, [user]);
-
   useEffect(() => {
     loadOrders();
 
-    // Auto refresh every 15 seconds to purge expired orders live!
     const timer = setInterval(() => {
       loadOrders();
     }, 15000);
-
     return () => clearInterval(timer);
   }, [user]);
 
   async function handleStatusUpdate(orderId: string, status: 'pending' | 'accepted' | 'completed') {
     try {
       await updateOrderStatus(orderId, status);
-
-      // Deduct inventory when order is accepted
       if (status === 'accepted') {
+
         const order = orders.find(o => o.id === orderId);
         if (order && order.items.length > 0) {
           await deductInventoryForOrder(
@@ -85,13 +87,11 @@ export function OnlineOrdersPage() {
   }
 
   async function handleConvertToBill(ord: OnlineOrder) {
-    // Deduct inventory for the order items
     if (ord.items.length > 0) {
       await deductInventoryForOrder(
         ord.items.map(i => ({ item_id: i.item_id, qty: i.qty })),
       );
     }
-    // Mark order completed & navigate to billing
     updateOrderStatus(ord.id, 'completed');
     navigate('/billing', {
       state: {
@@ -109,11 +109,12 @@ export function OnlineOrdersPage() {
 
   function getRemainingMins(completedAt?: string): number {
     if (!completedAt) return 5;
+
     const elapsedMs = Date.now() - new Date(completedAt).getTime();
+
     const remainingMs = 5 * 60 * 1000 - elapsedMs;
     return Math.max(1, Math.ceil(remainingMs / 60000));
   }
-
   return (
     <div style={{ maxWidth: 800 }}>
       <div className="row spread" style={{ marginBottom: 16 }}>
@@ -125,7 +126,6 @@ export function OnlineOrdersPage() {
         </div>
         <Button title="🔄 Refresh Orders" variant="ghost" onClick={loadOrders} />
       </div>
-
       {loading ? (
         <Spinner text="Loading incoming orders..." />
       ) : orders.length === 0 ? (
@@ -137,9 +137,10 @@ export function OnlineOrdersPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {orders.map(ord => {
-            const isCompleted = ord.status === 'completed';
-            const minsLeft = isCompleted ? getRemainingMins(ord.completed_at) : 5;
 
+            const isCompleted = ord.status === 'completed';
+
+            const minsLeft = isCompleted ? getRemainingMins(ord.completed_at) : 5;
             return (
               <Card
                 key={ord.id}
@@ -171,7 +172,6 @@ export function OnlineOrdersPage() {
                       📅 {formatDateTime(ord.created_at)}
                     </div>
                   </div>
-
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
                       {formatCurrency(ord.total_amount)}
@@ -181,14 +181,12 @@ export function OnlineOrdersPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Customer Details Box */}
+                {}
                 <div style={{ margin: '12px 0', background: 'var(--surface-2)', padding: 10, borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
                   <div><strong>Customer:</strong> {ord.customer_name} {ord.customer_phone ? `· 📞 ${ord.customer_phone}` : ''}</div>
                   {ord.customer_address ? <div style={{ marginTop: 2 }}><strong>Delivery Address:</strong> 📍 {ord.customer_address}</div> : null}
                 </div>
-
-                {/* Ordered Items Table */}
+                {}
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginBottom: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>ORDERED ITEMS:</div>
                   {ord.items.map((it, idx) => (
@@ -198,8 +196,7 @@ export function OnlineOrdersPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Action Buttons */}
+                {}
                 <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
                   <Button
                     title="🧾 Convert to Official Bill"

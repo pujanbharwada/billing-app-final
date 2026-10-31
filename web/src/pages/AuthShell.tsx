@@ -1,4 +1,3 @@
-// A centered card with a split marketing panel — shared by Login & Signup.
 import { APP_NAME } from '../config/constants';
 
 export function AuthShell({
@@ -12,15 +11,14 @@ export function AuthShell({
 }) {
   return (
     <div className="auth-container">
-      {/* Mobile Top Header (only visible on mobile screens) */}
+      {}
       <div className="auth-mobile-header">
         <div className="auth-mobile-logo-box">
           <img src="/logo.png" alt={APP_NAME} className="auth-mobile-logo" />
         </div>
         <p className="auth-mobile-tagline">Invoicing & Business Management Made Simple</p>
       </div>
-
-      {/* Marketing hero panel (desktop layout) */}
+      {}
       <div className="auth-hero">
         <div className="hero-logo-box">
           <img src="/logo.png" alt={APP_NAME} style={{ width: '100%', height: 'auto', maxHeight: 110, objectFit: 'contain' }} />
@@ -36,8 +34,7 @@ export function AuthShell({
           <li>🔒 Your data stays private to you</li>
         </ul>
       </div>
-
-      {/* Form Container */}
+      {}
       <div className="auth-form-wrapper">
         <div className="auth-form-card">
           <div className="auth-form-header">
@@ -48,7 +45,6 @@ export function AuthShell({
           {children}
         </div>
       </div>
-
       <style>{`
         .auth-container {
           display: flex;
@@ -107,7 +103,6 @@ export function AuthShell({
           text-align: center;
           margin-bottom: 24px;
         }
-
         @media (max-width: 820px) {
           .auth-container {
             flex-direction: column;

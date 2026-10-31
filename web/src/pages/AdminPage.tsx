@@ -1,14 +1,11 @@
-// ---------------------------------------------------------------------------
-// ADMIN — the app owner's control panel. Lists every BUSINESS account that
-// registered. For each one the admin can:
-//   • assign a PLAN (21-day trial / 1m / 3m / 6m / 1y / permanent),
-//   • Freeze (suspend access),
-//   • Delete the account permanently (cascades all their data).
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, EmptyState, Spinner } from '../components/UI';
+
 import {
   listAllUsers,
   freezeUser,
@@ -16,6 +13,7 @@ import {
   deleteUserAccount,
   type AdminUserRow,
 } from '../services/adminService';
+
 import {
   computeStatus,
   planLabel,
@@ -26,14 +24,21 @@ import {
   rejectSubscriptionRequest,
   clearAllPendingSubscriptionRequests,
 } from '../services/subscriptionService';
+
 import { formatDate } from '../utils/format';
+
 import { APP_NAME } from '../config/constants';
 
 export function AdminPage() {
+
   const { user, signOut } = useAuth();
+
   const { toast, confirm } = useToast();
+
   const [rows, setRows] = useState<AdminUserRow[]>([]);
+
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -46,7 +51,6 @@ export function AdminPage() {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     load();
   }, [load]);
@@ -86,6 +90,7 @@ export function AdminPage() {
   }
 
   async function handleClearAllPending() {
+
     const ok = await confirm(
       'Clear All Pending Requests?',
       'This will clear all pending test subscription requests from the list.',
@@ -102,6 +107,7 @@ export function AdminPage() {
   }
 
   async function removeAccount(row: AdminUserRow) {
+
     const ok = await confirm(
       'Delete account permanently?',
       `This will permanently delete ${row.email ?? 'this account'} and ALL of their ` +
@@ -119,7 +125,6 @@ export function AdminPage() {
   }
 
   const visible = rows.filter(r => r.role !== 'admin');
-
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 22px' }}>
       <div className="row spread" style={{ marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
@@ -129,8 +134,7 @@ export function AdminPage() {
       <p className="muted">
         Manage business accounts, approve subscription payment requests, or suspend access. Admin: {user?.email}
       </p>
-
-      {/* Pending Subscription Payment Requests */}
+      {}
       {pendingRequests.length > 0 ? (
         <Card style={{ marginBottom: 24, borderColor: 'var(--primary)', background: 'var(--primary-soft)' }}>
           <div className="row spread" style={{ alignItems: 'center', marginBottom: 6 }}>
@@ -187,7 +191,6 @@ export function AdminPage() {
           ))}
         </Card>
       ) : null}
-
       {loading ? (
         <Spinner />
       ) : visible.length === 0 ? (
@@ -220,7 +223,9 @@ function AdminRow({
   onFreeze: () => void;
   onDelete: () => void;
 }) {
+
   const { status, daysLeft } = computeStatus(row.subscription);
+
   const [plan, setPlan] = useState<PlanKey>(
     PLANS.some(p => p.key === row.subscription?.plan)
       ? (row.subscription!.plan as PlanKey)
@@ -243,7 +248,6 @@ function AdminRow({
     );
 
   const end = row.subscription?.trial_end;
-
   return (
     <Card>
       <div className="row spread" style={{ flexWrap: 'wrap', gap: 12 }}>
@@ -259,7 +263,6 @@ function AdminRow({
               : ''}
           </div>
         </div>
-
         <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
           <select
             className="input"
@@ -277,6 +280,7 @@ function AdminRow({
             title="Apply"
             small
             onClick={() => {
+
               const p = PLANS.find(p => p.key === plan);
               if (p) onApplyPlan(plan, p.label);
             }}

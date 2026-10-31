@@ -1,36 +1,38 @@
-// ---------------------------------------------------------------------------
-// BILLING — create OR edit a bill. The form ADAPTS to the user's store type:
-//   • medical  → batch no., expiry date, per-line discount % (+ expiry warning)
-//   • apparel  → size/variant, HSN, per-line discount %
-//   • electronics → serial/model, warranty (months)
-//   • restaurant → table no., dine-in/takeaway, service charge %
-//   • services → "description × hours × rate" + notes
-//   • grocery  → plain item · qty · rate
-// Every store also gets bill-level Discount % and Tax/GST %, with a full
-// Subtotal → Discount → (Service charge) → Tax → Grand Total breakdown.
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { useNavigate, useSearchParams } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSubscription } from '../context/SubscriptionContext';
+
 import { useSettings } from '../context/SettingsContext';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, Spinner } from '../components/UI';
+
 import { Autocomplete } from '../components/Autocomplete';
+
 import {
   searchCustomers,
   findCustomerByName,
   findOrCreateCustomer,
 } from '../services/customerService';
+
 import { searchItems, findOrCreateItem } from '../services/itemService';
+
 import {
   createBill,
   getBillWithItems,
   getNextBillNumber,
   updateBill,
 } from '../services/billService';
+
 import type { Customer, Item } from '../types/models';
+
 import { validateBill } from '../utils/validation';
+
 import { formatCurrency, toNumber } from '../utils/format';
 
 type Row = {
@@ -39,29 +41,38 @@ type Row = {
   item_name: string;
   qty: string;
   rate: string;
-  discount: string; // per-line %
+  discount: string;
   meta: Record<string, string>;
 };
 
 const clampPct = (n: number) => Math.min(100, Math.max(0, n));
 
-// Days until an ISO date (YYYY-MM-DD); negative = already past.
 function daysUntil(iso: string): number {
+
   const d = new Date(iso + 'T00:00:00').getTime();
   return Math.ceil((d - Date.now()) / 86400000);
 }
 
 export function BillingPage() {
+
   const { user } = useAuth();
+
   const { isUsable, inventoryEnabled } = useSubscription();
+
   const { store } = useSettings();
+
   const { toast } = useToast();
+
   const navigate = useNavigate();
+
   const [params, setParams] = useSearchParams();
+
   const billId = params.get('billId');
 
   const keyRef = useRef(0);
+
   const newKey = () => String(keyRef.current++);
+
   const emptyRow = (): Row => ({
     key: newKey(),
     item_id: null,
@@ -73,23 +84,35 @@ export function BillingPage() {
   });
 
   const [billNumber, setBillNumber] = useState('…');
+
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
+
   const [customerName, setCustomerName] = useState('');
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
   const [rows, setRows] = useState<Row[]>([emptyRow()]);
 
-  // Bill-level charges + per-store extras.
-  const [billDiscount, setBillDiscount] = useState(''); // %
-  const [tax, setTax] = useState(''); // %
-  const [serviceCharge, setServiceCharge] = useState(''); // %
+  const [billDiscount, setBillDiscount] = useState('');
+
+  const [tax, setTax] = useState('');
+
+  const [serviceCharge, setServiceCharge] = useState('');
+
   const [tableNo, setTableNo] = useState('');
+
   const [orderType, setOrderType] = useState('dine-in');
+
   const [notes, setNotes] = useState('');
+
   const [patientAddress, setPatientAddress] = useState('');
+
   const [doctorName, setDoctorName] = useState('');
+
   const [doctorAddress, setDoctorAddress] = useState('');
 
   const [loading, setLoading] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   const resetForm = useCallback(async () => {
@@ -111,20 +134,21 @@ export function BillingPage() {
     } catch {
       setBillNumber('INV-1001');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   useEffect(() => {
     if (!billId) {
       resetForm();
       return;
     }
+
     let active = true;
     (async () => {
       setLoading(true);
       try {
+
         const bill = await getBillWithItems(billId);
         if (!active) return;
+
         const extra = bill.extra ?? {};
         setEditingBillId(bill.id);
         setBillNumber(bill.bill_number);
@@ -163,12 +187,12 @@ export function BillingPage() {
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [billId]);
 
   function updateRow(key: string, patch: Partial<Row>) {
     setRows(prev => prev.map(r => (r.key === key ? { ...r, ...patch } : r)));
   }
+
   function updateMeta(key: string, field: string, value: string) {
     setRows(prev =>
       prev.map(r =>
@@ -176,27 +200,40 @@ export function BillingPage() {
       ),
     );
   }
+
   const addRow = () => setRows(prev => [...prev, emptyRow()]);
+
   const removeRow = (key: string) =>
     setRows(prev => (prev.length > 1 ? prev.filter(r => r.key !== key) : prev));
 
-  // ---- Totals -------------------------------------------------------------
   const lineTotal = (r: Row) => {
+
     const base = toNumber(r.qty) * toNumber(r.rate);
+
     const d = store.lineDiscount ? clampPct(toNumber(r.discount)) : 0;
     return base * (1 - d / 100);
   };
+
   const subtotal = rows.reduce((s, r) => s + lineTotal(r), 0);
+
   const discountPct = clampPct(toNumber(billDiscount));
+
   const discountAmount = subtotal * (discountPct / 100);
+
   const afterDiscount = subtotal - discountAmount;
+
   const scPct = store.billExtras.includes('service_charge')
     ? clampPct(toNumber(serviceCharge))
     : 0;
+
   const serviceChargeAmount = afterDiscount * (scPct / 100);
+
   const taxable = afterDiscount + serviceChargeAmount;
+
   const taxPct = clampPct(toNumber(tax));
+
   const taxAmount = taxable * (taxPct / 100);
+
   const grandTotal = taxable + taxAmount;
 
   function startNew() {
@@ -206,10 +243,9 @@ export function BillingPage() {
 
   async function handleSubmit() {
     if (!user || saving) return;
-    // Set the flag BEFORE the first await (the customer lookup) so a fast
-    // double-click / double-Enter can't start two saves and create two bills.
     setSaving(true);
     try {
+
       let existing: Customer | null = selectedCustomer;
       if (!existing && customerName.trim()) {
         try {
@@ -232,13 +268,11 @@ export function BillingPage() {
       }
 
       const customer = existing ?? (await findOrCreateCustomer(user.id, customerName));
+
       const validRows = rows.filter(
         r => r.item_name.trim() && r.qty.trim() && r.rate.trim(),
       );
 
-      // Resolve every line to a real item (creating new ones) so each bill line
-      // carries an item_id — the DB then adjusts stock automatically for any
-      // item that is tracked.
       const resolvedItems = await Promise.all(
         validRows.map(r =>
           r.item_id
@@ -246,10 +280,8 @@ export function BillingPage() {
             : findOrCreateItem(user.id, r.item_name, toNumber(r.rate)),
         ),
       );
-
-      // Inventory: warn (but still allow — per the chosen policy) when a NEW
-      // sale would take a tracked item below zero.
       if (inventoryEnabled && !editingBillId) {
+
         const short = validRows
           .map((r, i) => ({ item: resolvedItems[i], want: toNumber(r.qty) }))
           .filter(x => x.item.track_stock && (x.item.stock_qty ?? 0) < x.want);
@@ -265,10 +297,13 @@ export function BillingPage() {
       }
 
       const billItems = validRows.map((r, i) => {
+
         const qty = toNumber(r.qty);
+
         const rate = toNumber(r.rate);
+
         const d = store.lineDiscount ? clampPct(toNumber(r.discount)) : 0;
-        // Keep only meta keys that actually have a value.
+
         const meta: Record<string, string> = {};
         Object.entries(r.meta).forEach(([k, v]) => {
           if (v && v.trim()) meta[k] = v.trim();
@@ -313,10 +348,8 @@ export function BillingPage() {
         extra,
         items: billItems,
       };
-
       if (editingBillId) await updateBill(editingBillId, input);
       else await createBill(user.id, input);
-
       toast(editingBillId ? 'Bill updated ✅' : `Bill ${billNumber} created ✅`, 'success');
       navigate('/history');
     } catch (e: any) {
@@ -325,9 +358,7 @@ export function BillingPage() {
       setSaving(false);
     }
   }
-
   if (loading) return <Spinner text="Loading bill…" />;
-
   return (
     <div style={{ maxWidth: 760 }}>
       <div className="row spread" style={{ marginBottom: 12 }}>
@@ -338,7 +369,6 @@ export function BillingPage() {
           <Button title="Start new" variant="ghost" small onClick={startNew} />
         ) : null}
       </div>
-
       {!isUsable ? (
         <Card
           style={{
@@ -351,7 +381,6 @@ export function BillingPage() {
           ⚠️ Your trial/subscription has expired — billing is disabled.
         </Card>
       ) : null}
-
       <Card style={{ marginBottom: 16 }}>
         <div className="row spread" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div className="muted">
@@ -360,8 +389,7 @@ export function BillingPage() {
           <span className="badge badge-primary">{store.label}</span>
         </div>
       </Card>
-
-      {/* Restaurant order header */}
+      {}
       {store.billExtras.includes('table_no') ||
       store.billExtras.includes('order_type') ? (
         <Card style={{ marginBottom: 16 }}>
@@ -394,8 +422,7 @@ export function BillingPage() {
           </div>
         </Card>
       ) : null}
-
-      {/* Patient / Customer Details */}
+      {}
       {store.medicalExtras ? (
         <>
           <Card style={{ marginBottom: 16 }}>
@@ -435,7 +462,6 @@ export function BillingPage() {
               </div>
             </div>
           </Card>
-
           <Card style={{ marginBottom: 16 }}>
             <h4 style={{ marginTop: 0, marginBottom: 12 }}>Prescribing Doctor Details</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -485,12 +511,13 @@ export function BillingPage() {
           ) : null}
         </>
       )}
-
       <h3 style={{ marginBottom: 10 }}>Items</h3>
       {rows.map((row, index) => {
+
         const expiry = row.meta.expiry_date;
+
         const rawExpDays = store.expiryAlerts && expiry ? daysUntil(expiry) : null;
-        // A malformed stored expiry date yields NaN — don't render "in NaN days".
+
         const expDays =
           rawExpDays !== null && Number.isFinite(rawExpDays) ? rawExpDays : null;
         return (
@@ -507,7 +534,6 @@ export function BillingPage() {
                 </button>
               ) : null}
             </div>
-
             <Autocomplete<Item>
               label={store.itemLabel}
               value={row.item_name}
@@ -526,8 +552,7 @@ export function BillingPage() {
               }
               placeholder={`${store.itemLabel} name`}
             />
-
-            {/* Store-specific extra fields */}
+            {}
             {store.lineFields.length ? (
               <div
                 style={{
@@ -551,7 +576,6 @@ export function BillingPage() {
                 ))}
               </div>
             ) : null}
-
             {expDays !== null ? (
               <div
                 style={{
@@ -568,7 +592,6 @@ export function BillingPage() {
                   : `✓ Expires in ${expDays} day(s)`}
               </div>
             ) : null}
-
             <div
               style={{
                 display: 'grid',
@@ -623,12 +646,10 @@ export function BillingPage() {
           </Card>
         );
       })}
-
       <div style={{ marginTop: 6 }}>
         <Button title="＋ Add item" variant="ghost" onClick={addRow} />
       </div>
-
-      {/* Charges */}
+      {}
       <Card style={{ marginTop: 18 }}>
         <h3 style={{ marginTop: 0 }}>Charges</h3>
         <div
@@ -675,7 +696,6 @@ export function BillingPage() {
             </div>
           ) : null}
         </div>
-
         {store.billExtras.includes('notes') ? (
           <div className="field" style={{ marginTop: 12, marginBottom: 0 }}>
             <label className="field-label">Notes</label>
@@ -690,8 +710,7 @@ export function BillingPage() {
           </div>
         ) : null}
       </Card>
-
-      {/* Totals breakdown */}
+      {}
       <Card style={{ marginTop: 16 }}>
         <Line label="Subtotal" value={formatCurrency(subtotal)} />
         {discountAmount > 0 ? (
@@ -713,7 +732,6 @@ export function BillingPage() {
           </strong>
         </div>
       </Card>
-
       <div style={{ marginTop: 18 }}>
         <Button
           title={editingBillId ? 'Update Bill' : 'Generate Bill'}

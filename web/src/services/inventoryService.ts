@@ -1,8 +1,5 @@
-// ---------------------------------------------------------------------------
-// INVENTORY SERVICE — manual stock changes + low-stock lookups.
-// Strictly filtered by user_id for multi-tenant privacy!
-// ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
+
 import type { Item, StockMovement } from '../types/models';
 
 export type StockReason = 'restock' | 'adjustment' | 'return' | 'opening';
@@ -13,6 +10,7 @@ export async function adjustStock(
   reason: StockReason,
   note?: string,
 ): Promise<void> {
+
   const { error } = await supabase.rpc('adjust_stock', {
     p_item_id: itemId,
     p_change: change,
@@ -23,7 +21,9 @@ export async function adjustStock(
 }
 
 export async function listLowStock(limit = 1000): Promise<Item[]> {
+
   const { data: userData } = await supabase.auth.getUser();
+
   const uid = userData.user?.id;
   if (!uid) return [];
 
@@ -44,7 +44,9 @@ export async function listMovements(
   itemId: string,
   limit = 50,
 ): Promise<StockMovement[]> {
+
   const { data: userData } = await supabase.auth.getUser();
+
   const uid = userData.user?.id;
   if (!uid) return [];
 
@@ -62,7 +64,9 @@ export async function listMovements(
 export type MovementWithItem = StockMovement & { item_name?: string };
 
 export async function listRecentMovements(limit = 50): Promise<MovementWithItem[]> {
+
   const { data: userData } = await supabase.auth.getUser();
+
   const uid = userData.user?.id;
   if (!uid) return [];
 
@@ -97,9 +101,10 @@ export type InventorySummary = {
 };
 
 export async function getInventorySummary(): Promise<InventorySummary> {
-  const { data: userData } = await supabase.auth.getUser();
-  const uid = userData.user?.id;
 
+  const { data: userData } = await supabase.auth.getUser();
+
+  const uid = userData.user?.id;
   if (!uid) {
     return { rows: [], totalValue: 0, trackedCount: 0, lowCount: 0 };
   }
@@ -113,9 +118,13 @@ export async function getInventorySummary(): Promise<InventorySummary> {
   if (error) throw new Error(error.message);
 
   const items = (data ?? []) as Item[];
+
   const rows: ValuationRow[] = items.map(i => {
+
     const qty = i.stock_qty ?? 0;
+
     const reorder = i.reorder_level ?? 0;
+
     const cost = i.cost_price ?? null;
     return {
       item_id: i.id,

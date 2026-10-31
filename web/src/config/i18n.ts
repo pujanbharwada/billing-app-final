@@ -1,8 +1,3 @@
-// ---------------------------------------------------------------------------
-// i18n — Multi-Language Support (English, Hindi, Gujarati, Marathi, Telugu)
-// Built specifically for Indian shopkeepers and retail businesses.
-// ---------------------------------------------------------------------------
-
 export type LanguageKey = 'en' | 'hi' | 'gu' | 'mr' | 'te';
 
 export type LanguageOption = {
@@ -22,7 +17,6 @@ export const LANGUAGES: LanguageOption[] = [
 
 export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
   en: {
-    // Navigation
     dashboard: 'Dashboard',
     newBill: 'New Bill',
     onlineOrders: 'Online Orders',
@@ -37,8 +31,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     freeTrial: '21-Day Free Trial',
     daysRemaining: 'days remaining',
     signedInAs: 'Signed in as',
-
-    // Buttons & Actions
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
@@ -50,8 +42,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     loading: 'Loading…',
     action: 'Action',
     saveSettings: 'Save Settings',
-
-    // Dashboard
     totalCustomers: 'Total Customers',
     totalItems: 'Total Products',
     totalBills: 'Total Bills',
@@ -60,8 +50,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'Recent Bills',
     sales7Days: 'Last 7 Days Sales',
     quickActions: 'Quick Actions',
-
-    // Billing Form
     billDetails: 'Bill Details',
     billNumber: 'Bill Number',
     customerName: 'Customer Name',
@@ -79,8 +67,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     grandTotal: 'Grand Total',
     generateBill: 'Generate Bill',
     updateBill: 'Update Bill',
-
-    // Settings
     language: 'App Language',
     selectLanguageDesc: 'Choose your preferred language for the app interface.',
     storeType: 'Store Type',
@@ -89,14 +75,11 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     shopName: 'Shop Name',
     phone: 'Phone Number',
     address: 'Shop Address',
-
-    // Stock & Inventory
     stockQty: 'Stock Qty',
     lowStock: 'Low Stock',
     restock: 'Restock',
   },
   hi: {
-    // Navigation
     dashboard: 'डैशबोर्ड',
     newBill: 'नया बिल',
     onlineOrders: 'ऑनलाइन ऑर्डर',
@@ -111,8 +94,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     freeTrial: '21-दिन का मुफ्त ट्रायल',
     daysRemaining: 'दिन शेष',
     signedInAs: 'लॉग इन किया:',
-
-    // Buttons & Actions
     save: 'सहेजें (Save)',
     cancel: 'रद्द करें',
     delete: 'हटाएं (Delete)',
@@ -124,8 +105,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     loading: 'लोड हो रहा है…',
     action: 'कार्रवाई',
     saveSettings: 'सेटिंग्स सहेजें',
-
-    // Dashboard
     totalCustomers: 'कुल ग्राहक',
     totalItems: 'कुल सामान',
     totalBills: 'कुल बिल',
@@ -134,8 +113,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'हाल के बिल',
     sales7Days: 'पिछले 7 दिनों की बिक्री',
     quickActions: 'त्वरित कार्य',
-
-    // Billing Form
     billDetails: 'बिल विवरण',
     billNumber: 'बिल नंबर',
     customerName: 'ग्राहक का नाम',
@@ -153,8 +130,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     grandTotal: 'कुल योग (Grand Total)',
     generateBill: 'बिल बनाएं (Generate)',
     updateBill: 'बिल अपडेट करें',
-
-    // Settings
     language: 'ऐप की भाषा (Language)',
     selectLanguageDesc: 'अपनी सुविधानुसार अपनी भाषा चुनें।',
     storeType: 'दुकान का प्रकार (Store Type)',
@@ -163,14 +138,11 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     shopName: 'दुकान का नाम',
     phone: 'फ़ोन नंबर',
     address: 'दुकान का पता',
-
-    // Stock & Inventory
     stockQty: 'स्टॉक मात्रा',
     lowStock: 'कम स्टॉक',
     restock: 'स्टॉक भरें',
   },
   gu: {
-    // Navigation
     dashboard: 'ડેશબોર્ડ',
     newBill: 'નવું બિલ',
     onlineOrders: 'ઓનલાઈન ઓર્ડર',
@@ -185,8 +157,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     freeTrial: '21-દિવસની ફ્રી ટ્રાયલ',
     daysRemaining: 'દિવસો બાકી',
     signedInAs: 'લોગિન કર્યું:',
-
-    // Buttons & Actions
     save: 'સાચવો (Save)',
     cancel: 'રદ કરો',
     delete: 'કાઢી નાખો (Delete)',
@@ -198,8 +168,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     loading: 'લોડ થઈ રહ્યું છે…',
     action: 'કારવાઈ',
     saveSettings: 'સેટિંગ્સ સાચવો',
-
-    // Dashboard
     totalCustomers: 'કુલ ગ્રાહકો',
     totalItems: 'કુલ પ્રોડક્ટ્સ',
     totalBills: 'કુલ બિલો',
@@ -208,8 +176,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'તાજેતરના બિલો',
     sales7Days: 'છેલ્લા 7 દિવસનું વેચાણ',
     quickActions: 'ઝડપી કાર્યો',
-
-    // Billing Form
     billDetails: 'બિલ વિગતો',
     billNumber: 'બિલ નંબર',
     customerName: 'ગ્રાહકનું નામ',
@@ -227,8 +193,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     grandTotal: 'કુલ રકમ (Grand Total)',
     generateBill: 'બિલ બનાવો (Generate)',
     updateBill: 'બિલ અપડેટ કરો',
-
-    // Settings
     language: 'એપની ભાષા (Language)',
     selectLanguageDesc: 'તમારી પસંદગી મુજબ એપની ભાષા પસંદ કરો.',
     storeType: 'દુકાનનો પ્રકાર (Store Type)',
@@ -237,14 +201,11 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     shopName: 'દુકાનનું નામ',
     phone: 'ફોન નંબર',
     address: 'દુકાનનું સરનામું',
-
-    // Stock & Inventory
     stockQty: 'સ્ટોક જથ્થો',
     lowStock: 'ઓછો સ્ટોક',
     restock: 'સ્ટોક ઉમેરો',
   },
   mr: {
-    // Navigation
     dashboard: 'डॅशबोर्ड',
     newBill: 'नवीन बिल',
     onlineOrders: 'ऑनलाइन ऑर्डर्स',
@@ -259,8 +220,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     freeTrial: '21-दिवसांची मोफत ट्रायल',
     daysRemaining: 'दिवस बाकी',
     signedInAs: 'लॉग इन केले:',
-
-    // Buttons & Actions
     save: 'जतन करा (Save)',
     cancel: 'रद्द करा',
     delete: 'हटवा (Delete)',
@@ -272,8 +231,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     loading: 'लोड होत आहे…',
     action: 'कृती',
     saveSettings: 'सेटिंग्ज जतन करा',
-
-    // Dashboard
     totalCustomers: 'एकूण ग्राहक',
     totalItems: 'एकूण वस्तू',
     totalBills: 'एकूण बिलांची संख्या',
@@ -282,8 +239,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'नुकतीच झालेली बिले',
     sales7Days: 'मागील 7 दिवसांची विक्री',
     quickActions: 'जलद कृती',
-
-    // Billing Form
     billDetails: 'बिल तपशील',
     billNumber: 'बिल क्रमांक',
     customerName: 'ग्राहकाचे नाव',
@@ -301,8 +256,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     grandTotal: 'एकूण बिल (Grand Total)',
     generateBill: 'बिल तयार करा (Generate)',
     updateBill: 'बिल अपडेट करा',
-
-    // Settings
     language: 'ॲपची भाषा (Language)',
     selectLanguageDesc: 'आपल्या सोयीनुसार ॲपची भाषा निवडा.',
     storeType: 'दुकानाचा प्रकार (Store Type)',
@@ -311,14 +264,11 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     shopName: 'दुकानाचे नाव',
     phone: 'फोन नंबर',
     address: 'दुकानाचा पत्ता',
-
-    // Stock & Inventory
     stockQty: 'स्टॉक प्रमाण',
     lowStock: 'कमी स्टॉक',
     restock: 'स्टॉक भरा',
   },
   te: {
-    // Navigation
     dashboard: 'డాష్‌బోర్డ్',
     newBill: 'కొత్త బిల్లు',
     onlineOrders: 'ఆన్‌లైన్ ఆర్డర్లు',
@@ -333,8 +283,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     freeTrial: '21 రోజుల ఉచిత ట్రయల్',
     daysRemaining: 'రోజులు మిగిలి ఉన్నాయి',
     signedInAs: 'లాగిన్ అయ్యారు:',
-
-    // Buttons & Actions
     save: 'సేవ్ చేయండి (Save)',
     cancel: 'రద్దు చేయండి',
     delete: 'తొలగించండి (Delete)',
@@ -346,8 +294,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     loading: 'లోడ్ అవుతోంది…',
     action: 'చర్య',
     saveSettings: 'సెట్టింగ్‌లు సేవ్ చేయండి',
-
-    // Dashboard
     totalCustomers: 'మొత్తం కస్టమర్లు',
     totalItems: 'మొత్తం వస్తువులు',
     totalBills: 'మొత్తం బిల్లులు',
@@ -356,8 +302,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     recentBills: 'ఇటీవలి బిల్లులు',
     sales7Days: 'గత 7 రోజుల అమ్మకాలు',
     quickActions: 'త్వరిత చర్యలు',
-
-    // Billing Form
     billDetails: 'బిల్లు వివరాలు',
     billNumber: 'బిల్లు నంబర్',
     customerName: 'కస్టమర్ పేరు',
@@ -375,8 +319,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     grandTotal: 'మొత్తం బిల్లు (Grand Total)',
     generateBill: 'బిల్లును రూపొందించండి (Generate)',
     updateBill: 'బిల్లును అప్‌డేట్ చేయండి',
-
-    // Settings
     language: 'యాప్ భాష (Language)',
     selectLanguageDesc: 'మీకు నచ్చిన భాషను ఎంచుకోండి.',
     storeType: 'దుకాణం రకం (Store Type)',
@@ -385,8 +327,6 @@ export const TRANSLATIONS: Record<LanguageKey, Record<string, string>> = {
     shopName: 'దుకాణం పేరు',
     phone: 'ఫోన్ నంబర్',
     address: 'దుకాణం చిరునామా',
-
-    // Stock & Inventory
     stockQty: 'స్టాక్ పరిమాణం',
     lowStock: 'తక్కువ స్టాక్',
     restock: 'స్టాక్ జోడించండి',

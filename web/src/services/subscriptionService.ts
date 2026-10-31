@@ -1,14 +1,11 @@
-// ---------------------------------------------------------------------------
-// SUBSCRIPTION SERVICE — the 21-day trial & subscription logic.
-// ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
+
 import type { Subscription } from '../types/models';
 
 export type SubStatus = 'frozen' | 'trial' | 'active' | 'expired';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-// The plans an admin can assign. `days: null` means permanent / unlimited.
 export type PlanKey = 'trial' | '1m' | '3m' | '6m' | '1y' | 'permanent';
 
 export const PLANS: {
@@ -32,8 +29,8 @@ export function planLabel(key: string | null | undefined): string {
   return PLANS.find(p => p.key === key)?.label ?? '—';
 }
 
-// Read the current user's subscription row (created automatically on signup).
 export async function getSubscription(userId: string): Promise<Subscription | null> {
+
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
@@ -43,45 +40,35 @@ export async function getSubscription(userId: string): Promise<Subscription | nu
   return (data as Subscription) ?? null;
 }
 
-// Work out the REAL status right now from the dates (don't just trust the
-// stored text, since a trial can quietly expire as time passes).
 export function computeStatus(sub: Subscription | null): {
   status: SubStatus;
-  daysLeft: number; // -1 means unlimited (permanent)
+  daysLeft: number;
 } {
   if (!sub) return { status: 'expired', daysLeft: 0 };
-  // Frozen by the admin (or not yet approved) — app access is blocked.
   if (sub.status === 'frozen') return { status: 'frozen', daysLeft: 0 };
-
-  // Permanent / unlimited: an active plan with no end date.
   if (sub.status === 'active' && !sub.trial_end) {
     return { status: 'active', daysLeft: -1 };
   }
-
-  // No end date but not a permanent active plan → treat as expired.
   if (!sub.trial_end) return { status: 'expired', daysLeft: 0 };
 
-  // Time-limited: trial OR a paid plan with an end date. Compute from the date
-  // (don't just trust the stored text — a plan can quietly expire over time).
   const endMs = new Date(sub.trial_end).getTime();
-  // An unparseable end date must not silently grant access (NaN comparisons are
-  // always false, which would otherwise skip the expiry check below).
   if (!Number.isFinite(endMs)) return { status: 'expired', daysLeft: 0 };
+
   const msLeft = endMs - Date.now();
   if (msLeft <= 0) return { status: 'expired', daysLeft: 0 };
+
   const daysLeft = Math.max(0, Math.round(msLeft / MS_PER_DAY));
-  // Keep the trial vs paid label so the UI can say "trial" or "subscribed".
   return { status: sub.status === 'active' ? 'active' : 'trial', daysLeft };
 }
 
-// Can the user use paid features (billing, etc.) right now?
 export function isAppUsable(sub: Subscription | null): boolean {
+
   const { status } = computeStatus(sub);
   return status === 'trial' || status === 'active';
 }
 
-// Mark the subscription active (used later when you add real payments).
 export async function activateSubscription(userId: string): Promise<void> {
+
   const { error } = await supabase
     .from('subscriptions')
     .update({ status: 'active', updated_at: new Date().toISOString() })
@@ -89,16 +76,13 @@ export async function activateSubscription(userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// ---------------------------------------------------------------------------
-// FREE SUBSCRIPTION PAYMENTS — 1-tap request & Admin 1-click approval
-// ---------------------------------------------------------------------------
-
 export async function submitSubscriptionPayment(
   userId: string,
   userEmail: string,
   planKey: string,
   amount: number,
 ): Promise<void> {
+
   const { error } = await supabase.from('subscription_payments').insert({
     user_id: userId,
     user_email: userEmail,
@@ -111,6 +95,7 @@ export async function submitSubscriptionPayment(
 
 export async function getUserPendingPayment(userId: string) {
   try {
+
     const { data, error } = await supabase
       .from('subscription_payments')
       .select('*')
@@ -127,6 +112,7 @@ export async function getUserPendingPayment(userId: string) {
 
 export async function getPendingSubscriptionRequests() {
   try {
+
     const { data: payments, error } = await supabase
       .from('subscription_payments')
       .select('*')
@@ -144,17 +130,19 @@ export async function approveSubscriptionRequest(
   userId: string,
   planKey: string,
 ): Promise<void> {
+
   const planObj = PLANS.find(p => p.key === planKey);
+
   const days = planObj?.days ?? null;
 
-  // 1. Fetch current subscription to stack/extend days if already on active paid plan
   const existingSub = await getSubscription(userId);
 
   let baseMs = Date.now();
   if (existingSub && existingSub.status === 'active' && existingSub.plan !== 'trial' && existingSub.trial_end) {
+
     const currentEndMs = new Date(existingSub.trial_end).getTime();
     if (Number.isFinite(currentEndMs) && currentEndMs > Date.now()) {
-      baseMs = currentEndMs; // Start extension from current future expiration date!
+      baseMs = currentEndMs;
     }
   }
 
@@ -163,7 +151,6 @@ export async function approveSubscriptionRequest(
     trialEndIso = new Date(baseMs + days * 86400000).toISOString();
   }
 
-  // 2. Activate or extend subscription table row
   const { error: subErr } = await supabase
     .from('subscriptions')
     .update({
@@ -174,8 +161,6 @@ export async function approveSubscriptionRequest(
     })
     .eq('user_id', userId);
   if (subErr) throw new Error(subErr.message);
-
-  // 3. Delete ONLY this specific paymentId request so other pending requests stay for individual approval
   try {
     await supabase.from('subscription_payments').delete().eq('id', paymentId);
   } catch {
@@ -192,11 +177,11 @@ export async function rejectSubscriptionRequest(paymentId: string): Promise<void
 }
 
 export async function clearAllPendingSubscriptionRequests(): Promise<void> {
+
   const { error } = await supabase
     .from('subscription_payments')
     .delete()
     .neq('id', '00000000-0000-0000-0000-000000000000');
-  
   if (error) {
     await supabase
       .from('subscription_payments')

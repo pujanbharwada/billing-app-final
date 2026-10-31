@@ -1,12 +1,13 @@
-// ---------------------------------------------------------------------------
-// CUSTOMERS — search + paginated list (load more), add/edit modal, freeze/
-// unfreeze, delete. Web port of the original CustomersScreen.
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useDebounce } from '../hooks/useDebounce';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, EmptyState, Modal, Spinner, TextField } from '../components/UI';
+
 import {
   createCustomer,
   deleteCustomer,
@@ -14,29 +15,41 @@ import {
   setFrozen,
   updateCustomerName,
 } from '../services/customerService';
+
 import type { Customer } from '../types/models';
 
 const PAGE = 30;
 
 export function CustomersPage() {
+
   const { user } = useAuth();
+
   const { toast, confirm } = useToast();
+
   const [query, setQuery] = useState('');
+
   const debounced = useDebounce(query, 300);
 
   const [items, setItems] = useState<Customer[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [loadingMore, setLoadingMore] = useState(false);
+
   const [hasMore, setHasMore] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
+
   const [editing, setEditing] = useState<Customer | null>(null);
+
   const [nameInput, setNameInput] = useState('');
+
   const [saving, setSaving] = useState(false);
 
   const loadFirst = useCallback(async () => {
     setLoading(true);
     try {
+
       const page = await fetchCustomersPage({ search: debounced, limit: PAGE, offset: 0 });
       setItems(page);
       setHasMore(page.length === PAGE);
@@ -46,7 +59,6 @@ export function CustomersPage() {
       setLoading(false);
     }
   }, [debounced, toast]);
-
   useEffect(() => {
     loadFirst();
   }, [loadFirst]);
@@ -55,6 +67,7 @@ export function CustomersPage() {
     if (loadingMore || loading || !hasMore) return;
     setLoadingMore(true);
     try {
+
       const page = await fetchCustomersPage({ search: debounced, limit: PAGE, offset: items.length });
       setItems(prev => [...prev, ...page]);
       setHasMore(page.length === PAGE);
@@ -68,6 +81,7 @@ export function CustomersPage() {
     setNameInput('');
     setModalOpen(true);
   }
+
   function openEdit(c: Customer) {
     setEditing(c);
     setNameInput(c.customer_name);
@@ -75,6 +89,7 @@ export function CustomersPage() {
   }
 
   async function save() {
+
     const name = nameInput.trim();
     if (!name || !user) return;
     setSaving(true);
@@ -110,14 +125,12 @@ export function CustomersPage() {
       toast(e?.message ?? 'Could not delete.', 'error');
     }
   }
-
   return (
     <div>
       <div className="row spread" style={{ marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>Customers</h1>
         <Button title="+ Add customer" onClick={openAdd} />
       </div>
-
       <input
         className="input"
         value={query}
@@ -125,7 +138,6 @@ export function CustomersPage() {
         placeholder="Search customers…"
         style={{ marginBottom: 16 }}
       />
-
       {loading ? (
         <Spinner />
       ) : items.length === 0 ? (
@@ -165,7 +177,6 @@ export function CustomersPage() {
           ) : null}
         </>
       )}
-
       <Modal open={modalOpen} title={editing ? 'Edit customer' : 'New customer'} onClose={() => setModalOpen(false)}>
         <TextField
           label="Customer name"

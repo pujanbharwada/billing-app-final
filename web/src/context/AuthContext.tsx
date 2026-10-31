@@ -1,12 +1,3 @@
-// ---------------------------------------------------------------------------
-// AUTH CONTEXT
-// ---------------------------------------------------------------------------
-// Shares with the whole app: who is logged in, their ROLE (admin vs user),
-// and functions to sign up / sign in / sign out.
-// Includes 4-second heartbeat session verification for instant auto-logout
-// when an account is deleted by Admin!
-// ---------------------------------------------------------------------------
-
 import {
   createContext,
   useCallback,
@@ -14,9 +5,13 @@ import {
   useEffect,
   useState,
 } from 'react';
+
 import type { PropsWithChildren } from 'react';
+
 import type { Session, User } from '@supabase/supabase-js';
+
 import { supabase } from '../lib/supabase';
+
 import { getMyProfile, type Profile } from '../services/profileService';
 
 type AuthResult = { error: string | null };
@@ -24,10 +19,10 @@ type AuthResult = { error: string | null };
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
-  initializing: boolean; // checking for a saved login on startup
-  profile: Profile | null; // role + email
+  initializing: boolean;
+  profile: Profile | null;
   isAdmin: boolean;
-  profileLoading: boolean; // looking up the role after login
+  profileLoading: boolean;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -36,12 +31,14 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [initializing, setInitializing] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
 
-  // 1) Restore any saved session on startup, then listen for auth changes.
+  const [session, setSession] = useState<Session | null>(null);
+
+  const [initializing, setInitializing] = useState(true);
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  const [profileLoading, setProfileLoading] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -51,17 +48,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
     });
-
     return () => sub.subscription.unsubscribe();
   }, []);
-
-  // 2) Whenever the logged-in user changes, look up their profile (role).
   useEffect(() => {
+
     const userId = session?.user?.id;
     if (!userId) {
       setProfile(null);
       return;
     }
+
     let active = true;
     setProfileLoading(true);
     getMyProfile(userId)
@@ -90,17 +86,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
       active = false;
     };
   }, [session?.user?.id]);
-
-  // 3) Heartbeat session verification: check if account was deleted by Admin
   useEffect(() => {
+
     const userId = session?.user?.id;
     if (!userId) return;
 
     let failCount = 0;
-    const MAX_FAILS = 3; // Only logout after 3 consecutive failures
+
+    const MAX_FAILS = 3;
 
     const heartbeat = setInterval(async () => {
       try {
+
         const p = await getMyProfile(userId);
         if (!p) {
           failCount++;
@@ -111,7 +108,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
             setProfile(null);
           }
         } else {
-          failCount = 0; // Reset on success
+          failCount = 0;
         }
       } catch {
         failCount++;
@@ -123,12 +120,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
       }
     }, 4000);
-
     return () => clearInterval(heartbeat);
   }, [session?.user?.id]);
 
   const signUp = useCallback(
     async (email: string, password: string): Promise<AuthResult> => {
+
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -140,6 +137,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<AuthResult> => {
+
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -166,11 +164,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     signIn,
     signOut,
   };
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
+
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error('useAuth must be used inside an <AuthProvider>');

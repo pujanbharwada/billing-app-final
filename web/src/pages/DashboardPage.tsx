@@ -1,40 +1,55 @@
-// ---------------------------------------------------------------------------
-// DASHBOARD — welcome, KPI cards, 7-day chart, bills feed
-// ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSubscription } from '../context/SubscriptionContext';
+
 import { useSettings } from '../context/SettingsContext';
+
 import { useLanguage } from '../context/LanguageContext';
+
 import { Button, Card, Spinner } from '../components/UI';
+
 import {
   getDashboardStats,
   type DashboardStats,
 } from '../services/analyticsService';
+
 import { getExpiringBatches, type ExpiringLine } from '../services/billService';
+
 import { listLowStock } from '../services/inventoryService';
+
 import type { Item } from '../types/models';
+
 import { formatCurrency, formatDateTime } from '../utils/format';
 
 export function DashboardPage() {
-  const { user } = useAuth();
-  const { inventoryEnabled } = useSubscription();
-  const { store } = useSettings();
-  const { t } = useLanguage();
-  const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [expiring, setExpiring] = useState<ExpiringLine[]>([]);
-  const [lowStock, setLowStock] = useState<Item[]>([]);
 
+  const { user } = useAuth();
+
+  const { inventoryEnabled } = useSubscription();
+
+  const { store } = useSettings();
+
+  const { t } = useLanguage();
+
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [expiring, setExpiring] = useState<ExpiringLine[]>([]);
+
+  const [lowStock, setLowStock] = useState<Item[]>([]);
   useEffect(() => {
     getDashboardStats()
       .then(setStats)
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
-
   useEffect(() => {
     if (!store.expiryAlerts) {
       setExpiring([]);
@@ -44,7 +59,6 @@ export function DashboardPage() {
       .then(setExpiring)
       .catch(() => setExpiring([]));
   }, [store.expiryAlerts]);
-
   useEffect(() => {
     if (!inventoryEnabled) {
       setLowStock([]);
@@ -59,7 +73,6 @@ export function DashboardPage() {
     Math.ceil((new Date(iso + 'T00:00:00').getTime() - Date.now()) / 86400000);
 
   const maxDay = stats ? Math.max(1, ...stats.last7.map(d => d.total)) : 1;
-
   return (
     <div>
       <div className="row spread" style={{ alignItems: 'center', marginBottom: 16 }}>
@@ -70,8 +83,7 @@ export function DashboardPage() {
           </p>
         </div>
       </div>
-
-      {/* Expiry reminders (medical stores) */}
+      {}
       {store.expiryAlerts && expiring.length > 0 ? (
         <Card
           style={{
@@ -88,6 +100,7 @@ export function DashboardPage() {
             Batches sold that are expired or expiring within 60 days.
           </p>
           {expiring.slice(0, 6).map(e => {
+
             const d = daysToExpiry(e.expiry_date);
             return (
               <div
@@ -122,8 +135,7 @@ export function DashboardPage() {
           ) : null}
         </Card>
       ) : null}
-
-      {/* Low-stock reminders (inventory enabled) */}
+      {}
       {inventoryEnabled && lowStock.length > 0 ? (
         <Card
           style={{
@@ -162,12 +174,11 @@ export function DashboardPage() {
           </div>
         </Card>
       ) : null}
-
       {loading ? (
         <Spinner text="Loading your numbers…" />
       ) : stats ? (
         <>
-          {/* KPI cards */}
+          {}
           <div
             style={{
               display: 'grid',
@@ -182,7 +193,6 @@ export function DashboardPage() {
             <Kpi label={t('totalCustomers')} value={String(stats.customers)} />
             <Kpi label={t('totalItems')} value={String(stats.items)} />
           </div>
-
           <div
             style={{
               display: 'grid',
@@ -191,7 +201,7 @@ export function DashboardPage() {
             }}
             className="dash-grid"
           >
-            {/* 7-day chart */}
+            {}
             <Card>
               <h3 style={{ marginTop: 0 }}>Last 7 days</h3>
               <div
@@ -225,8 +235,7 @@ export function DashboardPage() {
                 ))}
               </div>
             </Card>
-
-            {/* Recent bills */}
+            {}
             <Card>
               <h3 style={{ marginTop: 0 }}>Recent bills</h3>
               {stats.recent.length === 0 ? (

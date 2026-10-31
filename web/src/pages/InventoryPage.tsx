@@ -1,13 +1,11 @@
-// ---------------------------------------------------------------------------
-// INVENTORY — the stock back-office (only reachable when the admin has enabled
-// inventory for this account). Shows: total stock valuation + counts, the
-// on-hand table for every tracked item (low rows highlighted), and a recent
-// stock-movement feed (in / out / sale / return / adjustment).
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, EmptyState, Spinner, Modal, TextField } from '../components/UI';
+
 import {
   getInventorySummary,
   listRecentMovements,
@@ -16,6 +14,7 @@ import {
   type MovementWithItem,
   type StockReason,
 } from '../services/inventoryService';
+
 import { formatCurrency, formatDateTime, toNumber } from '../utils/format';
 
 const REASON_LABEL: Record<string, string> = {
@@ -27,21 +26,30 @@ const REASON_LABEL: Record<string, string> = {
 };
 
 export function InventoryPage() {
+
   const navigate = useNavigate();
+
   const { toast } = useToast();
+
   const [summary, setSummary] = useState<InventorySummary | null>(null);
+
   const [moves, setMoves] = useState<MovementWithItem[]>([]);
+
   const [loading, setLoading] = useState(true);
 
-  // Stock-in / adjust modal.
   const [adjustItem, setAdjustItem] = useState<{ id: string; item_name: string; stock_qty: number } | null>(null);
+
   const [adjustDelta, setAdjustDelta] = useState('');
+
   const [adjustReason, setAdjustReason] = useState<StockReason>('restock');
+
   const [adjustNote, setAdjustNote] = useState('');
+
   const [adjustSaving, setAdjustSaving] = useState(false);
 
   async function saveAdjust() {
     if (!adjustItem) return;
+
     const delta = toNumber(adjustDelta);
     if (!delta) {
       toast('Enter a non-zero quantity (use a negative number to reduce).', 'error');
@@ -65,6 +73,7 @@ export function InventoryPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+
       const [s, m] = await Promise.all([
         getInventorySummary(),
         listRecentMovements(50),
@@ -77,13 +86,10 @@ export function InventoryPage() {
       setLoading(false);
     }
   }, [toast]);
-
   useEffect(() => {
     load();
   }, [load]);
-
   if (loading) return <Spinner text="Loading inventory…" />;
-
   if (!summary || summary.trackedCount === 0) {
     return (
       <div>
@@ -98,15 +104,13 @@ export function InventoryPage() {
       </div>
     );
   }
-
   return (
     <div>
       <div className="row spread" style={{ marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <h1 style={{ margin: 0 }}>Inventory</h1>
         <Button title="Manage items" variant="ghost" small onClick={() => navigate('/items')} />
       </div>
-
-      {/* Summary cards */}
+      {}
       <div
         style={{
           display: 'grid',
@@ -119,8 +123,7 @@ export function InventoryPage() {
         <Kpi label="Tracked items" value={String(summary.trackedCount)} />
         <Kpi label="Low stock" value={String(summary.lowCount)} danger={summary.lowCount > 0} />
       </div>
-
-      {/* On-hand / valuation table */}
+      {}
       <Card style={{ marginBottom: 18 }}>
         <h3 style={{ marginTop: 0 }}>Stock on hand</h3>
         <div style={{ overflowX: 'auto' }}>
@@ -181,14 +184,14 @@ export function InventoryPage() {
           </table>
         </div>
       </Card>
-
-      {/* Recent movements */}
+      {}
       <Card>
         <h3 style={{ marginTop: 0 }}>Recent stock movements</h3>
         {moves.length === 0 ? (
           <p className="muted">No stock movements yet.</p>
         ) : (
           moves.map(m => {
+
             const up = m.change > 0;
             return (
               <div
@@ -217,8 +220,7 @@ export function InventoryPage() {
           })
         )}
       </Card>
-
-      {/* Stock in / adjust */}
+      {}
       <Modal
         open={!!adjustItem}
         title={adjustItem ? `Stock — ${adjustItem.item_name}` : 'Stock'}

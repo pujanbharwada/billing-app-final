@@ -1,26 +1,32 @@
-// ---------------------------------------------------------------------------
-// SETTINGS — pick your store type (changes the billing form + invoice) and set
-// your shop profile (name, logo, owner's phone, address) that prints on every
-// invoice. Saved to the database, so it follows you across devices.
-// ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
+
 import { useSettings } from '../context/SettingsContext';
+
 import { useLanguage } from '../context/LanguageContext';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, Spinner, TextField } from '../components/UI';
+
 import { STORE_TYPE_LIST, type StoreType } from '../config/storeTypes';
 
 function fileToLogoDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+
     const reader = new FileReader();
     reader.onload = () => {
+
       const img = new Image();
       img.onload = () => {
+
         const max = 240;
+
         const scale = Math.min(1, max / Math.max(img.width, img.height));
+
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
+
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject(new Error('Canvas not supported'));
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -35,18 +41,26 @@ function fileToLogoDataUrl(file: File): Promise<string> {
 }
 
 export function SettingsPage() {
+
   const { settings, store, loading, save } = useSettings();
+
   const { lang, setLang, t, languages } = useLanguage();
+
   const { toast } = useToast();
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [storeType, setStoreType] = useState<StoreType>('grocery');
-  const [shopName, setShopName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [logo, setLogo] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
+  const [shopName, setShopName] = useState('');
+
+  const [phone, setPhone] = useState('');
+
+  const [address, setAddress] = useState('');
+
+  const [logo, setLogo] = useState<string | null>(null);
+
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (!settings) return;
     setStoreType((settings.store_type as StoreType) ?? 'grocery');
@@ -57,6 +71,7 @@ export function SettingsPage() {
   }, [settings]);
 
   async function onPickLogo(e: React.ChangeEvent<HTMLInputElement>) {
+
     const file = e.target.files?.[0];
     if (!file) return;
     try {
@@ -83,14 +98,11 @@ export function SettingsPage() {
       setSaving(false);
     }
   }
-
   if (loading) return <Spinner text="Loading settings…" />;
-
   return (
     <div style={{ maxWidth: 680 }}>
       <h1 style={{ marginTop: 0 }}>{t('settings')}</h1>
-
-      {/* Language Selection Card */}
+      {}
       <Card style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>🌐 {t('language')}</h3>
         <p className="muted" style={{ marginTop: -6 }}>
@@ -104,6 +116,7 @@ export function SettingsPage() {
           }}
         >
           {languages.map(l => {
+
             const active = l.key === lang;
             return (
               <button
@@ -130,8 +143,7 @@ export function SettingsPage() {
           })}
         </div>
       </Card>
-
-      {/* Store type */}
+      {}
       <Card style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>Store type</h3>
         <p className="muted" style={{ marginTop: -6 }}>
@@ -145,6 +157,7 @@ export function SettingsPage() {
           }}
         >
           {STORE_TYPE_LIST.map(s => {
+
             const active = s.key === storeType;
             return (
               <button
@@ -170,14 +183,12 @@ export function SettingsPage() {
           })}
         </div>
       </Card>
-
-      {/* Shop profile */}
+      {}
       <Card style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>Shop profile</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           Shown on the header of every invoice you print or share.
         </p>
-
         <div className="row gap-md" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ textAlign: 'center' }}>
             <div
@@ -212,7 +223,6 @@ export function SettingsPage() {
               </button>
             ) : null}
           </div>
-
           <div style={{ flex: 1, minWidth: 240 }}>
             <TextField
               label="Shop name"
@@ -240,7 +250,6 @@ export function SettingsPage() {
           </div>
         </div>
       </Card>
-
       <Button title="Save settings" loading={saving} onClick={onSave} />
       <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
         Current store type: <strong>{store.label}</strong> · App Version: <strong>v1.0.0</strong>

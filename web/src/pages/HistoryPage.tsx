@@ -1,53 +1,68 @@
-// ---------------------------------------------------------------------------
-// BILL HISTORY — paginated list (newest first), grouped by day, searchable by
-// customer AND filterable by date range. Click a bill to expand → items +
-// Edit / Print / Share / Delete. "Delete all" in the header.
-// Date filter is always visible for medical/pharmacy (drug inspector audits).
-// ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
+
 import { useSettings } from '../context/SettingsContext';
+
 import { useDebounce } from '../hooks/useDebounce';
+
 import { useToast } from '../components/Toast';
+
 import { Button, Card, EmptyState, Spinner } from '../components/UI';
+
 import {
   deleteAllBills,
   deleteBill,
   fetchBillsPage,
   getBillItems,
 } from '../services/billService';
+
 import { printInvoice, downloadInvoicePdf, shareInvoice } from '../utils/invoice';
+
 import type { Bill, BillItem } from '../types/models';
+
 import { formatCurrency, formatDateTime, dayLabel } from '../utils/format';
 
 const PAGE = 20;
 
 export function HistoryPage() {
+
   const { user } = useAuth();
+
   const { settings } = useSettings();
+
   const navigate = useNavigate();
+
   const { toast, confirm } = useToast();
+
   const [query, setQuery] = useState('');
+
   const debounced = useDebounce(query, 300);
 
-  // Date filter — single date
   const [filterDate, setFilterDate] = useState('');
+
   const isMedical = settings?.store_type === 'medical';
 
   const [bills, setBills] = useState<Bill[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [loadingMore, setLoadingMore] = useState(false);
+
   const [hasMore, setHasMore] = useState(true);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const [itemsCache, setItemsCache] = useState<Record<string, BillItem[]>>({});
-  // Which invoice action is in flight, e.g. "pdf:<billId>" / "print:<billId>".
+
   const [busy, setBusy] = useState<string | null>(null);
 
   const loadFirst = useCallback(async () => {
     setLoading(true);
     try {
+
       const page = await fetchBillsPage({
         search: debounced,
         fromDate: filterDate || undefined,
@@ -63,7 +78,6 @@ export function HistoryPage() {
       setLoading(false);
     }
   }, [debounced, filterDate, toast]);
-
   useEffect(() => {
     loadFirst();
   }, [loadFirst]);
@@ -72,6 +86,7 @@ export function HistoryPage() {
     if (loadingMore || loading || !hasMore) return;
     setLoadingMore(true);
     try {
+
       const page = await fetchBillsPage({
         search: debounced,
         fromDate: filterDate || undefined,
@@ -98,6 +113,7 @@ export function HistoryPage() {
     setExpandedId(bill.id);
     if (!itemsCache[bill.id]) {
       try {
+
         const items = await getBillItems(bill.id);
         setItemsCache(prev => ({ ...prev, [bill.id]: items }));
       } catch (e: any) {
@@ -110,6 +126,7 @@ export function HistoryPage() {
     if (busy) return;
     setBusy(`print:${bill.id}`);
     try {
+
       const items = itemsCache[bill.id] ?? (await getBillItems(bill.id));
       await printInvoice(bill, items, settings);
     } catch (e: any) {
@@ -123,6 +140,7 @@ export function HistoryPage() {
     if (busy) return;
     setBusy(`pdf:${bill.id}`);
     try {
+
       const items = itemsCache[bill.id] ?? (await getBillItems(bill.id));
       await downloadInvoicePdf(bill, items, settings);
     } catch (e: any) {
@@ -134,15 +152,16 @@ export function HistoryPage() {
 
   async function doShare(bill: Bill) {
     try {
+
       const items = itemsCache[bill.id] ?? (await getBillItems(bill.id));
       await shareInvoice(bill, items, settings);
     } catch (e: any) {
-      // A cancelled native/web share throws AbortError — that's not an error.
       if (e?.name !== 'AbortError') toast(e?.message ?? 'Could not share.', 'error');
     }
   }
 
   function isDeletable(createdAt: string): boolean {
+
     const ageMs = Date.now() - new Date(createdAt).getTime();
     return ageMs <= 7 * 24 * 60 * 60 * 1000;
   }
@@ -175,7 +194,6 @@ export function HistoryPage() {
   }
 
   const hasDateFilter = !!filterDate;
-
   return (
     <div>
       <div className="row spread" style={{ marginBottom: 16 }}>
@@ -184,7 +202,6 @@ export function HistoryPage() {
           <Button title="Delete recent (< 7d)" variant="danger" small onClick={removeAll} />
         ) : null}
       </div>
-
       <div className="row gap-sm" style={{ marginBottom: 16, alignItems: 'center' }}>
         <input
           className="input"
@@ -209,7 +226,6 @@ export function HistoryPage() {
           )}
         </div>
       </div>
-
       {loading ? (
         <Spinner />
       ) : bills.length === 0 ? (
@@ -225,11 +241,15 @@ export function HistoryPage() {
       ) : (
         <>
           {bills.map((bill, index) => {
+
             const showDay =
               index === 0 ||
               dayLabel(bills[index - 1].created_at) !== dayLabel(bill.created_at);
+
             const expanded = expandedId === bill.id;
+
             const items = itemsCache[bill.id];
+
             const deletable = isDeletable(bill.created_at);
             return (
               <div key={bill.id}>
@@ -247,7 +267,6 @@ export function HistoryPage() {
                     {dayLabel(bill.created_at)}
                   </div>
                 ) : null}
-
                 <Card onClick={() => toggleExpand(bill)}>
                   <div className="row spread">
                     <div style={{ minWidth: 0 }}>
@@ -260,7 +279,6 @@ export function HistoryPage() {
                       {formatCurrency(bill.total_amount)}
                     </strong>
                   </div>
-
                   {expanded ? (
                     <div
                       onClick={e => e.stopPropagation()}
