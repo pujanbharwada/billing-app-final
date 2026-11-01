@@ -10,6 +10,10 @@ import type { PropsWithChildren } from 'react';
 
 import type { Session, User } from '@supabase/supabase-js';
 
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+
 import { supabase } from '../lib/supabase';
 
 import { getMyProfile, type Profile } from '../services/profileService';
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   const [profileLoading, setProfileLoading] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -51,6 +56,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleAppUrl = async ({ url }: { url: string }) => {
+      await Browser.close().catch(() => {});
+
+      if (url.includes('code=')) {
+        const raw = url.split('?')[1] || url.split('#')[1] || '';
+        const params = new URLSearchParams(raw);
+        const code = params.get('code');
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code).catch(err => {
+            console.error('OAuth code exchange failed:', err);
+          });
+        }
+      } else if (url.includes('access_token=') || url.includes('refresh_token=')) {
+        const hash = url.split('#')[1] || url.split('?')[1] || '';
+        const params = new URLSearchParams(hash);
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token }).catch(err => {
+            console.error('OAuth set session failed:', err);
+          });
+        }
+      }
+    };
+
+    const sub = App.addListener('appUrlOpen', handleAppUrl);
+    App.getLaunchUrl().then(launchUrl => {
+      if (launchUrl?.url) handleAppUrl({ url: launchUrl.url });
+    });
+
+    return () => {
+      sub.then(h => h.remove()).catch(() => {});
+    };
+  }, []);
+
   useEffect(() => {
 
     const userId = session?.user?.id;
@@ -87,6 +131,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       active = false;
     };
   }, [session?.user?.id]);
+
   useEffect(() => {
 
     const userId = session?.user?.id;
@@ -149,13 +194,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const signInWithGoogle = useCallback(async (): Promise<AuthResult> => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    return { error: error?.message ?? null };
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'com.billingapp.app://login-callback',
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) return { error: error.message };
+      if (data?.url) {
+        await Browser.open({ url: data.url, windowName: '_self' });
+      }
+      return { error: null };
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      return { error: error?.message ?? null };
+    }
   }, []);
 
   const signOut = useCallback(async () => {
