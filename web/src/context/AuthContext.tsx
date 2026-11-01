@@ -25,6 +25,7 @@ type AuthContextValue = {
   profileLoading: boolean;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
 };
 
@@ -147,6 +148,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [],
   );
 
+  const signInWithGoogle = useCallback(async (): Promise<AuthResult> => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
@@ -162,6 +173,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     profileLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
